@@ -190,7 +190,6 @@
                 </div>
             </div>
             
-            <!-- Proyección Flujo (Oculto para ahorrar espacio aquí, igual que antes) -->
         </div>
 
         <!-- Transactions Tab -->
@@ -222,7 +221,7 @@
                     <input type="hidden" id="tx-type" value="income">
                     <input type="hidden" id="tx-id" value="">
                     
-                    <!-- ACCIÓN: Nuevo vs Abono (Solo visible en Deuda o Ahorro) -->
+                    <!-- ACCIÓN: Nuevo vs Abono -->
                     <div id="action-type-container" class="mb-5 hidden">
                         <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Registro</label>
                         <div class="flex gap-3">
@@ -237,18 +236,17 @@
                         </div>
                     </div>
 
-                    <!-- SELECT DE PADRE (Si es Abono) -->
+                    <!-- SELECT DE PADRE -->
                     <div id="parent-select-container" class="mb-5 hidden p-4 bg-slate-50 border border-slate-200 rounded-lg">
                         <label class="block text-sm font-bold text-slate-700 mb-1" id="lbl-parent-select">Seleccionar Cuenta Destino</label>
                         <select id="tx-parent-id" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
                             <!-- JS Poblado -->
                         </select>
-                        <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> El monto ingresado se sumará/restará al balance del instrumento seleccionado.</p>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Monto (Sin Puntos)</label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Monto Líquido/Total</label>
                             <input type="number" step="any" min="0" id="tx-amount" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" oninput="app.calculateHonorarios()">
                         </div>
                         <div>
@@ -265,7 +263,7 @@
                         </div>
                     </div>
 
-                    <!-- CATEGORÍA (Para Ingresos, Gastos y Nueva Deuda) -->
+                    <!-- CATEGORÍA -->
                     <div class="mb-4" id="category-container">
                         <div class="flex justify-between items-end mb-1">
                             <label class="block text-sm font-medium text-slate-700">Categoría</label>
@@ -275,7 +273,19 @@
                         </select>
                     </div>
 
-                    <!-- Honorarios / IVA / Deductible (Igual que antes) -->
+                    <!-- SUELDO IUSD CONTAINER -->
+                    <div id="sueldo-container" class="hidden mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-semibold text-emerald-800"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Detalles Tributarios del Sueldo</h4>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Impuesto Único Retenido (IUSD)</label>
+                            <input type="number" step="any" min="0" id="tx-iusd" placeholder="Ej. 25000" class="w-full border border-emerald-300 rounded-lg p-2.5">
+                            <p class="text-xs text-emerald-700 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Ingresa el impuesto que pagó tu empleador. Te servirá como crédito para el IGC del próximo año.</p>
+                        </div>
+                    </div>
+
+                    <!-- HONORARIOS CONTAINER -->
                     <div id="honorarios-container" class="hidden mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                         <div class="flex justify-between items-center mb-2">
                             <h4 class="font-semibold text-emerald-800"><i class="fa-solid fa-file-invoice mr-2"></i>Calculadora Boleta Honorarios</h4>
@@ -297,6 +307,21 @@
                         </div>
                     </div>
 
+                    <!-- INTERÉS HIPOTECARIO CONTAINER -->
+                    <div id="mortgage-container" class="hidden mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                        <h4 class="font-semibold text-orange-800 mb-2"><i class="fa-solid fa-house mr-2"></i>Beneficio Tributario Art. 55 bis</h4>
+                        <label class="flex items-center space-x-2 text-slate-700 cursor-pointer mb-2">
+                            <input type="checkbox" id="tx-is-mortgage" class="rounded text-orange-600 h-4 w-4" onchange="document.getElementById('mortgage-interest-wrapper').classList.toggle('hidden', !this.checked)">
+                            <span class="text-sm font-medium">Este pago incluye intereses de Crédito Hipotecario</span>
+                        </label>
+                        <div id="mortgage-interest-wrapper" class="hidden mt-3 bg-white p-3 rounded-lg border border-orange-100">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Porción correspondiente SOLO a Interés</label>
+                            <input type="number" step="any" min="0" id="tx-mortgage-interest" placeholder="Ej. 150000" class="w-full border border-slate-300 rounded-lg p-2.5">
+                            <p class="text-xs text-orange-600 mt-2"><i class="fa-solid fa-lightbulb mr-1"></i>El interés reduce tu base imponible del IGC (tope máximo global 8 UTA anuales).</p>
+                        </div>
+                    </div>
+
+                    <!-- IVA / DEDUCIBLE -->
                     <div class="mb-4 hidden" id="iva-container">
                         <label class="flex items-center space-x-2 text-slate-700 cursor-pointer bg-blue-50 p-3 rounded border border-blue-200">
                             <input type="checkbox" id="tx-iva" class="rounded text-blue-600 h-4 w-4" onchange="app.handleIvaToggle()">
@@ -312,7 +337,7 @@
                         </label>
                     </div>
 
-                    <!-- NUEVO AHORRO (Solo si action=new y type=savings) -->
+                    <!-- NUEVO AHORRO -->
                     <div id="savings-container" class="hidden mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
                         <h4 class="font-semibold text-blue-800 mb-3"><i class="fa-solid fa-piggy-bank mr-2"></i>Detalles del Instrumento</h4>
                         <div class="mb-4">
@@ -424,32 +449,16 @@
         <div id="coach" class="tab-content p-4 md:p-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div>
-                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-user-graduate text-indigo-600 mr-2"></i>Coach Financiero & Tributario</h2>
-                    <p class="text-slate-500 mt-1">Análisis integral de Ahorro, Inversión y Legislación Chilena Vigente.</p>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-user-graduate text-indigo-600 mr-2"></i>Coach Tributario (AT <script>document.write(new Date().getFullYear()+1)</script>)</h2>
+                    <p class="text-slate-500 mt-1">Análisis de la Operación Renta del próximo año basado en tus movimientos.</p>
                 </div>
-                <button onclick="app.generateAIReport()" id="btn-ai-coach" class="w-full md:w-auto mt-4 md:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center">
-                    <i class="fa-solid fa-brain mr-2"></i> Generar Análisis Profundo
-                </button>
-            </div>
-            <div id="ai-report-container" class="hidden mb-8 bg-white rounded-2xl shadow-md border border-purple-100 overflow-hidden relative">
-                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 border-b border-purple-100 flex justify-between items-center">
-                    <h3 class="font-bold text-indigo-900"><i class="fa-solid fa-wand-magic-sparkles text-purple-600 mr-2"></i>Reporte Personalizado</h3>
-                    <button onclick="document.getElementById('ai-report-container').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times"></i></button>
-                </div>
-                <div id="ai-report-content" class="p-4 md:p-6 text-slate-700 leading-relaxed prose prose-indigo max-w-none"></div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-blue-500">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-arrow-trend-up mr-2 text-blue-500"></i>Estrategia de Inversión</h3>
-                    <div id="coach-investment-analysis" class="text-slate-600 space-y-4"></div>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-emerald-500">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-landmark mr-2 text-emerald-500"></i>Optimización Tributaria</h3>
-                    <div id="coach-tax-analysis" class="text-slate-600 space-y-4"></div>
-                </div>
                 <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-red-500 lg:col-span-2">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-calculator mr-2 text-red-500"></i>Simulador de Impuestos</h3>
-                    <div id="coach-tax-simulator" class="text-slate-600 space-y-3"></div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-calculator mr-2 text-red-500"></i>Simulador de Impuesto Global Complementario (IGC)</h3>
+                    <div id="coach-tax-simulator" class="text-slate-600 space-y-3">
+                        <!-- JS Render -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -566,13 +575,20 @@
         // ============================================================
         const app = {
             async init() {
-                document.getElementById('tx-date').valueAsDate = new Date();
+                this.initDate();
                 this.loadFromCache();
                 this.setTxType('income');
                 this.renderAll();
                 await this.fetchIndicators();
                 await this.fetchTransactions();
                 this.renderAll();
+            },
+
+            initDate() {
+                const today = new Date();
+                const tzOffset = today.getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
+                document.getElementById('tx-date').value = localISOTime;
             },
 
             renderAll() {
@@ -723,6 +739,10 @@
                         }
                     }
                 }
+                
+                // Mostrar siempre el módulo de Hipotecario si es deuda
+                const mortgageContainer = document.getElementById('mortgage-container');
+                mortgageContainer.classList.toggle('hidden', appState.currentTxType !== 'debt');
             },
 
             populateParentSelect() {
@@ -778,8 +798,7 @@
                 }
 
                 this.handleSubtypeChange();
-                if(type === 'income' && catSelect.value === 'Honorarios') this.handleCategoryChange();
-                else document.getElementById('honorarios-container').classList.add('hidden');
+                this.handleCategoryChange();
             },
 
             // --- LÓGICA FINANCIERA PRINCIPAL ---
@@ -861,11 +880,17 @@
             handleCategoryChange() {
                 const type = document.getElementById('tx-type').value;
                 const category = document.getElementById('tx-category').value;
-                if (type === 'income' && category === 'Honorarios' && appState.currentSubtype !== 'abono') {
-                    document.getElementById('honorarios-container').classList.remove('hidden');
-                    this.calculateHonorarios();
-                } else {
-                    document.getElementById('honorarios-container').classList.add('hidden');
+                
+                document.getElementById('honorarios-container').classList.add('hidden');
+                document.getElementById('sueldo-container').classList.add('hidden');
+
+                if (type === 'income' && appState.currentSubtype !== 'abono') {
+                    if (category === 'Honorarios') {
+                        document.getElementById('honorarios-container').classList.remove('hidden');
+                        this.calculateHonorarios();
+                    } else if (category === 'Sueldo') {
+                        document.getElementById('sueldo-container').classList.remove('hidden');
+                    }
                 }
             },
 
@@ -886,6 +911,8 @@
                     date: document.getElementById('tx-date').value,
                     description: document.getElementById('tx-description').value
                 };
+
+                let metaData = {};
 
                 if (txData.subType === 'abono') {
                     txData.parentId = document.getElementById('tx-parent-id').value;
@@ -918,13 +945,29 @@
                             const rate = getHonorariosRate(txData.date);
                             txData.honMode = inputType;
                             if (inputType === 'bruto') {
-                                txData.meta = { bruto: originalAmount, retencion: originalAmount * (rate/100), liquido: originalAmount - (originalAmount * (rate/100)) };
+                                metaData = { bruto: originalAmount, retencion: originalAmount * (rate/100), liquido: originalAmount - (originalAmount * (rate/100)) };
                             } else {
                                 const b = originalAmount / (1 - (rate/100));
-                                txData.meta = { bruto: b, retencion: b - originalAmount, liquido: originalAmount };
+                                metaData = { bruto: b, retencion: b - originalAmount, liquido: originalAmount };
                             }
+                        } else if (type === 'income' && txData.category === 'Sueldo') {
+                            const iusd = safeFloat(document.getElementById('tx-iusd').value);
+                            if (iusd > 0) metaData.iusd = iusd;
                         }
                     }
+                }
+
+                // Guardar metadata de interés hipotecario si aplica (para deudas o abonos)
+                if (type === 'debt') {
+                    const isMortgage = document.getElementById('tx-is-mortgage').checked;
+                    if (isMortgage) {
+                        const mInt = safeFloat(document.getElementById('tx-mortgage-interest').value);
+                        if (mInt > 0) metaData.mortgageInterest = mInt;
+                    }
+                }
+
+                if (Object.keys(metaData).length > 0) {
+                    txData.meta = metaData;
                 }
 
                 const btn = document.getElementById('btn-save-tx');
@@ -957,7 +1000,12 @@
                 if (!tx) return;
                 this.switchTab('transactions');
                 
-                // Setear Type y Subtype manualmente para recrear el estado exacto
+                // Limpiar campos meta adicionales
+                document.getElementById('tx-iusd').value = '';
+                document.getElementById('tx-is-mortgage').checked = false;
+                document.getElementById('mortgage-interest-wrapper').classList.add('hidden');
+                document.getElementById('tx-mortgage-interest').value = '';
+                
                 appState.currentTxType = tx.type;
                 document.getElementById('tx-type').value = tx.type;
                 
@@ -965,9 +1013,7 @@
                 const st = tx.subType || 'new';
                 for(let i=0; i<radios.length; i++){ radios[i].checked = (radios[i].value === st); }
                 
-                // Forzar UI update
-                this.setTxType(tx.type); // Esto recarga el dropdown
-                // Volver a aplicar subtype xq setTxType lo resetea a 'new'
+                this.setTxType(tx.type); 
                 for(let i=0; i<radios.length; i++){ radios[i].checked = (radios[i].value === st); }
                 this.handleSubtypeChange();
 
@@ -987,7 +1033,6 @@
                         if (tx.savingsType === 'apv') { document.getElementById('tx-apv-regime').value = tx.apvRegime || 'A'; if (tx.apvFund) document.getElementById('tx-apv-fund').value = tx.apvFund; }
                         if (tx.savingsType === 'cuenta2') { document.getElementById('tx-c2-afp').value = tx.c2Afp || 'Habitat'; document.getElementById('tx-c2-fund').value = tx.c2Fund || 'C'; }
                     } else {
-                        // Asegurarnos de que la categoría existe en el select (por si se borró)
                         const select = document.getElementById('tx-category');
                         if (!Array.from(select.options).some(o => o.value === tx.category)) {
                             select.innerHTML += `<option value="${tx.category}">${tx.category} (Antigua)</option>`;
@@ -998,12 +1043,27 @@
                             document.getElementById('tx-deductible').checked = tx.isDeductible || false;
                             if (tx.hasIva) { document.getElementById('tx-iva').checked = true; this.handleIvaToggle(); }
                         }
-                        if (tx.type === 'income' && tx.category === 'Honorarios' && tx.honMode) {
-                            document.getElementById('hon-input-type').value = tx.honMode;
-                            this.calculateHonorarios();
+                        
+                        // Restaurar meta data si aplica
+                        if (tx.type === 'income') {
+                            if (tx.category === 'Honorarios' && tx.honMode) {
+                                document.getElementById('hon-input-type').value = tx.honMode;
+                                this.calculateHonorarios();
+                            } else if (tx.category === 'Sueldo' && tx.meta && tx.meta.iusd) {
+                                document.getElementById('tx-iusd').value = tx.meta.iusd;
+                            }
+                            this.handleCategoryChange(); // Para forzar visibilidad contenedores
                         }
                     }
                 }
+
+                // Restaurar hipotecario
+                if (tx.type === 'debt' && tx.meta && tx.meta.mortgageInterest) {
+                    document.getElementById('tx-is-mortgage').checked = true;
+                    document.getElementById('mortgage-interest-wrapper').classList.remove('hidden');
+                    document.getElementById('tx-mortgage-interest').value = tx.meta.mortgageInterest;
+                }
+
                 document.getElementById('btn-save-tx').innerText = 'Actualizar Registro';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
@@ -1038,14 +1098,17 @@
                     let clpVal = formatCurrency(tx.originalAmount);
                     if (tx.currency !== 'CLP') clpVal = `<span class="font-medium text-slate-700">${formatOtherCurrency(tx.originalAmount, tx.currency)}</span>`;
 
-                    // Valor estimado
+                    // Valor estimado / Metadatos Extra
                     let estHtml = formatCurrency(this.getEstimatedCurrentValue(tx));
                     if(tx.type === 'income' && tx.category === 'Honorarios' && tx.meta) {
                         estHtml = `${formatCurrency(tx.meta.liquido)}<br><span class="text-xs text-slate-500">Bruto: ${formatCurrency(tx.meta.bruto)}</span>`;
+                    } else if(tx.type === 'income' && tx.category === 'Sueldo' && tx.meta && tx.meta.iusd) {
+                        estHtml += `<br><span class="text-xs text-emerald-600">+ IUSD Retenido: ${formatCurrency(tx.meta.iusd)}</span>`;
+                    } else if (tx.type === 'debt' && tx.meta && tx.meta.mortgageInterest) {
+                        estHtml += `<br><span class="text-xs text-orange-600">Interés Art 55 bis: ${formatCurrency(tx.meta.mortgageInterest)}</span>`;
                     } else if (tx.type === 'savings' && !isAbono) {
                         const base = this.getBaseAmountInCLP(tx);
                         const est = this.getEstimatedCurrentValue(tx);
-                        // Restar el capital puro (incluyendo aportes base) para sacar la rentabilidad
                         const aportesBase = appState.transactions.filter(t=>t.parentId == tx.id).reduce((s, a)=>s+this.getBaseAmountInCLP(a), 0);
                         const capTotal = base + aportesBase;
                         if(est > capTotal) estHtml += `<br><span class="text-xs text-emerald-500">Rentabilidad: +${formatCurrency(est - capTotal)}</span>`;
@@ -1080,13 +1143,11 @@
                     if (tx.type === 'debt') {
                         if (tx.subType !== 'abono') totalDebt += baseCLP;
                         else {
-                            totalDebt -= baseCLP; // Abono reduce la deuda
-                            if (txDate >= oneYearAgo) totalExpense += baseCLP; // Abono a deuda ES una salida de caja
+                            totalDebt -= baseCLP; 
+                            if (txDate >= oneYearAgo) totalExpense += baseCLP;
                         }
                     } else if (tx.type === 'savings') {
                         if (tx.subType !== 'abono') totalSavings += this.getEstimatedCurrentValue(tx);
-                        // Los abonos a ahorro ya los suma getEstimatedCurrentValue(padre). No los sumamos sueltos al total.
-                        // Pero sí son salida de caja
                         if (txDate >= oneYearAgo) totalExpense += baseCLP;
                     } else if (txDate >= oneYearAgo) {
                         if (tx.type === 'income') totalIncome += baseCLP;
@@ -1099,6 +1160,123 @@
                 document.getElementById('kpi-balance').innerText = formatCurrency(totalIncome - totalExpense);
                 document.getElementById('kpi-savings').innerText = formatCurrency(totalSavings);
                 document.getElementById('kpi-debt').innerText = formatCurrency(Math.max(0, totalDebt));
+            },
+
+            // --- COACH TRIBUTARIO (SIMULADOR IGC ACTUALIZADO) ---
+            updateCoach() {
+                const currentYear = new Date().getFullYear();
+                const regime = document.getElementById('regime-select').value;
+                
+                let honorariosBruto = 0, honorariosRetencion = 0;
+                let sueldosNeto = 0, sueldosIUSD = 0;
+                let interesesHipotecarios = 0;
+                let apvRegimenB = 0;
+                let rliPyme = 0; // Rentas de empresa
+                let totalIngresosPyme = 0, totalGastosPyme = 0;
+
+                // Compilar el año calendario actual
+                appState.transactions.forEach(tx => {
+                    const txYear = new Date(tx.date).getFullYear();
+                    if(txYear !== currentYear || isNaN(txYear)) return;
+                    
+                    const clp = this.getBaseAmountInCLP(tx);
+
+                    if (tx.type === 'income') {
+                        if (tx.category === 'Honorarios' && tx.meta) {
+                            honorariosBruto += tx.meta.bruto;
+                            honorariosRetencion += tx.meta.retencion;
+                        } else if (tx.category === 'Sueldo') {
+                            sueldosNeto += clp;
+                            if (tx.meta && tx.meta.iusd) sueldosIUSD += tx.meta.iusd;
+                        } else {
+                            totalIngresosPyme += clp;
+                        }
+                    } else if (tx.type === 'expense') {
+                        if (tx.isDeductible) totalGastosPyme += clp;
+                    } else if (tx.type === 'savings' && tx.savingsType === 'apv' && tx.apvRegime === 'B') {
+                        apvRegimenB += clp;
+                    }
+
+                    if (tx.type === 'debt' && tx.meta && tx.meta.mortgageInterest) {
+                        interesesHipotecarios += tx.meta.mortgageInterest;
+                    }
+                });
+
+                rliPyme = Math.max(0, totalIngresosPyme - totalGastosPyme);
+                const uta = appState.rates.utaDic || 834504; 
+
+                // 1. Determinar rentas brutas totales (Base IGC antes de deducciones)
+                let rentasBrutas = honorariosBruto + (sueldosNeto + sueldosIUSD);
+                if (regime === '14d8') {
+                    // Pro Pyme Transparente asigna 100% utilidad a los socios en IGC
+                    rentasBrutas += rliPyme;
+                }
+                // Si es 14D3, no sumamos RLI a IGC a menos que haya "retiros" (simplificado aquí para la demo)
+
+                // 2. Limite Art 55 bis (Hipotecario)
+                // Se deduce el 100% si renta bruta <= 90 UTA. Baja proporcional hasta 150 UTA. Tope max: 8 UTA.
+                const rentasBrutasUTA = rentasBrutas / uta;
+                let factorHipotecario = 1;
+                if (rentasBrutasUTA > 150) factorHipotecario = 0;
+                else if (rentasBrutasUTA > 90) factorHipotecario = (150 - rentasBrutasUTA) / 60;
+                
+                const limiteMaxHipotecario = 8 * uta;
+                const hipotecarioDeducible = Math.min(interesesHipotecarios, limiteMaxHipotecario) * factorHipotecario;
+
+                // 3. Base Imponible IGC
+                let baseIGC = rentasBrutas - apvRegimenB - hipotecarioDeducible;
+                if(baseIGC < 0) baseIGC = 0;
+
+                // 4. Calcular IGC Bruto según tabla
+                const baseIGCUTA = baseIGC / uta;
+                let bracket = IGC_BRACKETS_UTA.find(b => baseIGCUTA <= b.upTo) || IGC_BRACKETS_UTA[IGC_BRACKETS_UTA.length - 1];
+                let igcBruto = (baseIGC * bracket.rate) - (bracket.deduction * uta);
+                if(igcBruto < 0) igcBruto = 0;
+
+                // 5. Créditos
+                const totalCreditos = honorariosRetencion + sueldosIUSD;
+                const igcNeto = igcBruto - totalCreditos;
+
+                const container = document.getElementById('coach-tax-simulator');
+                
+                let html = `
+                    <div class="text-sm bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div class="flex justify-between items-center mb-1"><span class="text-slate-500">Rentas Personales Brutas:</span> <span class="font-medium">${formatCurrency(honorariosBruto + sueldosNeto + sueldosIUSD)}</span></div>
+                        ${regime === '14d8' ? `<div class="flex justify-between items-center mb-1"><span class="text-slate-500">Utilidad Atribuida Empresa (14 D8):</span> <span class="font-medium">${formatCurrency(rliPyme)}</span></div>` : ''}
+                        
+                        <div class="my-3 border-t border-slate-200"></div>
+                        <div class="text-xs font-bold text-slate-400 uppercase mb-2">Rebajas a la Base</div>
+                        <div class="flex justify-between items-center mb-1 text-emerald-600"><span class=""><i class="fa-solid fa-piggy-bank mr-1"></i> APV Régimen B:</span> <span>- ${formatCurrency(apvRegimenB)}</span></div>
+                        <div class="flex justify-between items-center mb-1 text-orange-600"><span class=""><i class="fa-solid fa-house mr-1"></i> Int. Hipotecario (Art. 55 bis):</span> <span>- ${formatCurrency(hipotecarioDeducible)}</span></div>
+                        ${factorHipotecario < 1 && factorHipotecario > 0 ? `<div class="text-[10px] text-slate-400 mb-2 text-right">Beneficio reducido al ${(factorHipotecario*100).toFixed(0)}% por tramo de ingresos.</div>` : ''}
+                        
+                        <div class="my-3 border-t border-slate-200"></div>
+                        <div class="flex justify-between items-center mb-3"><span class="font-bold text-slate-700">Base Imponible IGC:</span> <span class="font-bold text-lg">${formatCurrency(baseIGC)}</span></div>
+                        
+                        <div class="flex justify-between items-center mb-1 text-slate-500"><span class="">Impuesto IGC Bruto según tramo:</span> <span>${formatCurrency(igcBruto)}</span></div>
+                        
+                        <div class="my-3 border-t border-slate-200"></div>
+                        <div class="text-xs font-bold text-slate-400 uppercase mb-2">Créditos a Favor (Ya Pagados)</div>
+                        <div class="flex justify-between items-center mb-1 text-blue-600"><span class=""><i class="fa-solid fa-file-invoice mr-1"></i> Retención Boletas:</span> <span>- ${formatCurrency(honorariosRetencion)}</span></div>
+                        <div class="flex justify-between items-center mb-1 text-blue-600"><span class=""><i class="fa-solid fa-building mr-1"></i> IUSD Empleador (Sueldos):</span> <span>- ${formatCurrency(sueldosIUSD)}</span></div>
+                    </div>
+                    
+                    <div class="bg-${igcNeto > 0 ? 'red' : 'emerald'}-50 p-4 rounded-lg border border-${igcNeto > 0 ? 'red' : 'emerald'}-200 flex justify-between items-center mt-4">
+                        <span class="font-bold text-${igcNeto > 0 ? 'red' : 'emerald'}-800 text-lg">${igcNeto > 0 ? 'Monto a Pagar en Renta:' : 'Devolución Estimada:'}</span>
+                        <span class="font-bold text-${igcNeto > 0 ? 'red' : 'emerald'}-600 text-xl">${formatCurrency(Math.abs(igcNeto))}</span>
+                    </div>
+                `;
+
+                if(regime === '14d3' && rliPyme > 0) {
+                     html += `
+                     <div class="mt-4 bg-slate-800 text-white p-4 rounded-lg">
+                        <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Impuesto de la Empresa (IDPC 14 D N°3)</span>
+                        <div class="flex justify-between items-center"><span>Base Imponible Empresa:</span> <span>${formatCurrency(rliPyme)}</span></div>
+                        <div class="flex justify-between items-center mt-1"><span>Tasa Transitoria IDPC (${(getIDPCRate(currentYear)*100)}%):</span> <span class="font-bold text-red-400">${formatCurrency(rliPyme * getIDPCRate(currentYear))}</span></div>
+                     </div>`;
+                }
+
+                container.innerHTML = html;
             },
 
             showConfirmModal(id) {
@@ -1125,12 +1303,14 @@
 
             exportToCSV() {
                 if (appState.transactions.length === 0) return this.showToast('No hay datos', 'warn');
-                const headers = ['ID', 'Fecha', 'Tipo', 'Accion', 'Categoria', 'Descripcion', 'Monto Original', 'Moneda', 'Monto CLP (Actual)'];
+                const headers = ['ID', 'Fecha', 'Tipo', 'Accion', 'Categoria', 'Descripcion', 'Monto Original', 'Moneda', 'Monto CLP (Actual)', 'IUSD', 'Int. Hipotecario'];
                 const rows = appState.transactions.map(tx => {
                     const est = Math.round(this.getEstimatedCurrentValue(tx));
                     let cat = tx.category || tx.savingsType || '-';
                     if(tx.subType === 'abono') cat = 'Abono/Aporte';
-                    return [tx.id, tx.date, tx.type, tx.subType||'new', cat, `"${(tx.description||'').replace(/"/g,'""')}"`, tx.originalAmount, tx.currency, est];
+                    const iusd = tx.meta?.iusd || 0;
+                    const intHip = tx.meta?.mortgageInterest || 0;
+                    return [tx.id, tx.date, tx.type, tx.subType||'new', cat, `"${(tx.description||'').replace(/"/g,'""')}"`, tx.originalAmount, tx.currency, est, iusd, intHip];
                 });
                 const csv = "data:text/csv;charset=utf-8,\uFEFF" + [headers, ...rows].map(e=>e.join(",")).join("\n");
                 const link = document.createElement("a");
@@ -1151,13 +1331,18 @@
             resetForm() {
                 document.getElementById('tx-form').reset();
                 document.getElementById('tx-id').value = '';
+                
+                // Reset hidden fields state manually
+                document.getElementById('tx-iusd').value = '';
+                document.getElementById('tx-mortgage-interest').value = '';
+                document.getElementById('mortgage-interest-wrapper').classList.add('hidden');
+                
                 document.getElementById('btn-save-tx').innerText = 'Guardar Registro';
                 this.initDate();
                 this.setTxType('income');
             },
 
-            // Funciones de utilidad que ya estaban (Coach, IA, etc)...
-            toggleSavingsSubFields() { /* ya implementado en html via onchange */ 
+            toggleSavingsSubFields() { 
                 const s = document.getElementById('tx-savings-type').value;
                 document.getElementById('fields-dap').classList.toggle('hidden', s !== 'dap');
                 document.getElementById('fields-apv').classList.toggle('hidden', s !== 'apv');
@@ -1205,9 +1390,7 @@
                     if (res.type !== 'savings') { document.getElementById('tx-category').value = res.category; this.handleCategoryChange(); }
                     this.showToast('Autocompletado con IA');
                 } catch (e) { this.showToast('Error IA', 'error'); } finally { btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Autocompletar'; btn.disabled = false; }
-            },
-            
-            updateCoach() { /* Lógica tributaria intacta del código anterior, recortada en display por brevedad aquí */ }
+            }
         };
 
         document.addEventListener('DOMContentLoaded', () => app.init());
