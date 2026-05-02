@@ -2,13 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanzas Personales & Pyme (Chile) con IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>FinanSmart - Finanzas Pyme (Chile) con IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Custom scrollbar for tables */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -16,7 +18,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        /* Shimmer effect for AI loading */
         .ai-loading {
             background: linear-gradient(90deg, #f0fdf4 25%, #dcfce7 50%, #f0fdf4 75%);
             background-size: 200% 100%;
@@ -26,15 +27,160 @@
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
+
+        /* ============================================
+           MÓVIL: input fontsize >=16px evita zoom iOS
+           ============================================ */
+        @media (max-width: 768px) {
+            input[type="text"],
+            input[type="number"],
+            input[type="date"],
+            input[type="email"],
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* ============================================
+           SIDEBAR MÓVIL (drawer deslizable)
+           ============================================ */
+        @media (max-width: 1023px) {
+            #sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100dvh;
+                z-index: 50;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+            #sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 40;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s;
+            }
+            #sidebar-overlay.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+
+        /* En desktop oculta el header móvil y el botón hamburguesa */
+        @media (min-width: 1024px) {
+            #mobile-header,
+            #sidebar-overlay {
+                display: none !important;
+            }
+            #sidebar {
+                position: relative !important;
+                transform: none !important;
+            }
+        }
+
+        /* ============================================
+           TABLA RESPONSIVA: en móvil, cards
+           ============================================ */
+        @media (max-width: 768px) {
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tbody tr {
+                display: block;
+                margin-bottom: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background: white;
+                padding: 12px;
+            }
+            .responsive-table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 6px 0 !important;
+                border: none !important;
+                text-align: right !important;
+                background: transparent !important;
+                font-size: 13px;
+            }
+            .responsive-table tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #64748b;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-right: 8px;
+                text-align: left;
+            }
+            .responsive-table tbody td.actions-cell {
+                justify-content: flex-end;
+                gap: 12px;
+                padding-top: 10px !important;
+                margin-top: 6px;
+                border-top: 1px solid #f1f5f9 !important;
+            }
+            .responsive-table tbody td.actions-cell::before {
+                display: none;
+            }
+        }
+
+        /* Botones más grandes en touch */
+        @media (max-width: 768px) {
+            button, .nav-link, [role="button"] {
+                min-height: 44px;
+            }
+            .icon-btn-mobile {
+                min-width: 44px;
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <!-- Header móvil (solo visible <1024px) -->
+    <header id="mobile-header" class="lg:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-md">
+        <button onclick="app.toggleSidebar()" class="icon-btn-mobile text-emerald-400 -ml-2" aria-label="Abrir menú">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+        <h1 class="text-lg font-bold text-emerald-400 flex items-center">
+            <i class="fa-solid fa-wallet mr-2"></i>FinanSmart
+        </h1>
+        <span id="mobile-tab-label" class="text-xs text-slate-400">Dashboard</span>
+    </header>
+
+    <!-- Overlay para cerrar sidebar -->
+    <div id="sidebar-overlay" onclick="app.toggleSidebar(false)"></div>
+
+    <!-- Wrapper principal -->
+    <div class="lg:flex lg:h-screen lg:overflow-hidden">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col transition-all duration-300 relative z-20 shrink-0">
-        <div class="p-6 border-b border-slate-700">
-            <h1 class="text-2xl font-bold text-emerald-400"><i class="fa-solid fa-wallet mr-2"></i>FinanSmart</h1>
-            <p class="text-xs text-slate-400 mt-1">Gestión & Coach Tributario</p>
+    <aside id="sidebar" class="w-72 lg:w-64 bg-slate-900 text-white flex flex-col shrink-0">
+        <div class="p-6 border-b border-slate-700 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-emerald-400"><i class="fa-solid fa-wallet mr-2"></i>FinanSmart</h1>
+                <p class="text-xs text-slate-400 mt-1">Gestión & Coach Tributario</p>
+            </div>
+            <button onclick="app.toggleSidebar(false)" class="lg:hidden icon-btn-mobile text-slate-400 hover:text-white" aria-label="Cerrar menú">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
         </div>
         
         <div class="p-4 border-b border-slate-700">
@@ -55,85 +201,89 @@
                 <li><a href="#" onclick="app.switchTab('coach')" class="nav-link block px-6 py-3 hover:bg-slate-800 hover:text-emerald-400 border-l-4 border-transparent" data-tab="coach"><i class="fa-solid fa-user-tie w-6"></i> Coach Financiero</a></li>
             </ul>
         </nav>
+
+        <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
+            <div class="flex justify-between items-center">
+                <span><i class="fa-solid fa-database mr-1"></i> Caché local</span>
+                <span id="cache-status" class="text-emerald-400">●</span>
+            </div>
+            <div class="flex justify-between items-center mt-1">
+                <span><i class="fa-solid fa-cloud mr-1"></i> Sheets</span>
+                <span id="sync-status" class="text-slate-500">●</span>
+            </div>
+        </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto bg-slate-50 relative">
+    <main class="flex-1 lg:overflow-y-auto bg-slate-50 relative">
         
         <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active p-8">
-            <h2 class="text-3xl font-bold mb-6 text-slate-800">Resumen Financiero <span class="text-sm font-normal text-slate-500 ml-2">(Valores en CLP actualizados)</span></h2>
+        <div id="dashboard" class="tab-content active p-4 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-slate-800">Resumen Financiero <span class="hidden md:inline text-sm font-normal text-slate-500 ml-2">(Valores en CLP actualizados)</span></h2>
             
-            <!-- KPIs -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-slate-100">
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-3 md:p-5 border border-slate-100">
                     <p class="text-xs text-slate-500 mb-1">Ingresos (12m)</p>
-                    <h3 class="text-xl font-bold text-slate-800" id="kpi-income">$0</h3>
+                    <h3 class="text-base md:text-xl font-bold text-slate-800 break-all" id="kpi-income">$0</h3>
                     <div class="mt-2 text-emerald-500 text-sm"><i class="fa-solid fa-arrow-up"></i></div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-slate-100">
+                <div class="bg-white rounded-xl shadow-sm p-3 md:p-5 border border-slate-100">
                     <p class="text-xs text-slate-500 mb-1">Gastos (12m)</p>
-                    <h3 class="text-xl font-bold text-slate-800" id="kpi-expense">$0</h3>
+                    <h3 class="text-base md:text-xl font-bold text-slate-800 break-all" id="kpi-expense">$0</h3>
                     <div class="mt-2 text-red-500 text-sm"><i class="fa-solid fa-arrow-down"></i></div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-slate-100 border-b-4 border-b-blue-500">
-                    <p class="text-xs text-slate-500 mb-1">Ahorro/Inversión Actual</p>
-                    <h3 class="text-xl font-bold text-slate-800" id="kpi-savings">$0</h3>
-                    <div class="mt-2 text-blue-500 text-sm"><i class="fa-solid fa-piggy-bank"></i> +Rentabilidad</div>
+                <div class="bg-white rounded-xl shadow-sm p-3 md:p-5 border border-slate-100 border-b-4 border-b-blue-500">
+                    <p class="text-xs text-slate-500 mb-1">Ahorro Actual</p>
+                    <h3 class="text-base md:text-xl font-bold text-slate-800 break-all" id="kpi-savings">$0</h3>
+                    <div class="mt-2 text-blue-500 text-xs md:text-sm"><i class="fa-solid fa-piggy-bank"></i> +Rentab.</div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-slate-100">
+                <div class="bg-white rounded-xl shadow-sm p-3 md:p-5 border border-slate-100">
                     <p class="text-xs text-slate-500 mb-1">Balance Operativo</p>
-                    <h3 class="text-xl font-bold text-slate-800" id="kpi-balance">$0</h3>
+                    <h3 class="text-base md:text-xl font-bold text-slate-800 break-all" id="kpi-balance">$0</h3>
                     <div class="mt-2 text-slate-400 text-sm"><i class="fa-solid fa-scale-balanced"></i></div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-slate-100">
+                <div class="bg-white rounded-xl shadow-sm p-3 md:p-5 border border-slate-100 col-span-2 lg:col-span-1">
                     <p class="text-xs text-slate-500 mb-1">Deuda Activa</p>
-                    <h3 class="text-xl font-bold text-slate-800" id="kpi-debt">$0</h3>
+                    <h3 class="text-base md:text-xl font-bold text-slate-800 break-all" id="kpi-debt">$0</h3>
                     <div class="mt-2 text-orange-500 text-sm"><i class="fa-solid fa-credit-card"></i></div>
                 </div>
             </div>
 
-            <!-- Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Evolution Chart -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 lg:col-span-2">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 lg:col-span-2">
                     <h3 class="text-lg font-semibold mb-4 text-slate-700">Evolución Ingresos vs Gastos (Últimos 12 meses)</h3>
-                    <div class="relative h-72">
+                    <div class="relative h-56 md:h-72">
                         <canvas id="evolutionChart"></canvas>
                     </div>
                 </div>
-                <!-- Expenses by Category Chart -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100">
                     <h3 class="text-lg font-semibold mb-4 text-slate-700">Gastos por Ítem</h3>
-                    <div class="relative h-72">
+                    <div class="relative h-56 md:h-72">
                         <canvas id="categoryChart"></canvas>
                     </div>
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Income vs Expenses Bar -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100">
                     <h3 class="text-lg font-semibold mb-4 text-slate-700">Proporción Ingresos vs Gastos</h3>
-                    <div class="relative h-64">
+                    <div class="relative h-48 md:h-64">
                         <canvas id="vsChart"></canvas>
                     </div>
                 </div>
-                <!-- Quick Coach Tip -->
                 <div class="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl shadow-sm p-6 text-white flex flex-col justify-center">
-                    <h3 class="text-xl font-bold mb-2"><i class="fa-solid fa-lightbulb text-yellow-300 mr-2"></i>Tip del Día</h3>
-                    <p id="quick-tip" class="text-indigo-100 text-lg leading-relaxed">Analizando tus finanzas para darte el mejor consejo...</p>
+                    <h3 class="text-lg md:text-xl font-bold mb-2"><i class="fa-solid fa-lightbulb text-yellow-300 mr-2"></i>Tip del Día</h3>
+                    <p id="quick-tip" class="text-indigo-100 text-base md:text-lg leading-relaxed">Analizando tus finanzas para darte el mejor consejo...</p>
                     <button onclick="app.switchTab('coach')" class="mt-6 bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded transition self-start">Ver análisis completo</button>
                 </div>
             </div>
 
-            <!-- Projections -->
             <div class="mt-6 bg-white rounded-xl shadow-sm p-6 border border-slate-100">
                 <h3 class="text-lg font-semibold mb-2 text-slate-700"><i class="fa-solid fa-chart-line text-indigo-500 mr-2"></i>Proyección de Flujo</h3>
-                <p class="text-sm text-slate-500 mb-6">Estimación basada en tu promedio histórico real (analizando hasta los últimos 6 meses con actividad). Asume que la tendencia de ingresos y gastos se mantiene.</p>
+                <p class="text-sm text-slate-500 mb-6">Estimación basada en tu promedio histórico real (solo meses con actividad efectiva en los últimos 6 meses).</p>
                 
-                <div class="overflow-x-auto mb-6">
-                    <table class="w-full text-left border-collapse">
+                <div class="md:overflow-x-auto mb-6">
+                    <table class="w-full text-left border-collapse responsive-table">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200">
                                 <th class="p-3 text-sm font-semibold text-slate-600">Horizonte</th>
@@ -144,28 +294,28 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr>
-                                <td class="p-3 text-sm font-medium text-slate-700 flex items-center"><i class="fa-regular fa-calendar mr-2 text-slate-400"></i>1 Mes</td>
-                                <td class="p-3 text-sm text-emerald-600 text-right" id="proj-inc-1">$0</td>
-                                <td class="p-3 text-sm text-red-600 text-right" id="proj-exp-1">$0</td>
-                                <td class="p-3 text-sm font-bold text-right" id="proj-bal-1">$0</td>
+                                <td class="p-3 text-sm font-medium text-slate-700" data-label="Horizonte"><i class="fa-regular fa-calendar mr-2 text-slate-400"></i>1 Mes</td>
+                                <td class="p-3 text-sm text-emerald-600 text-right" id="proj-inc-1" data-label="Ingresos">$0</td>
+                                <td class="p-3 text-sm text-red-600 text-right" id="proj-exp-1" data-label="Gastos">$0</td>
+                                <td class="p-3 text-sm font-bold text-right" id="proj-bal-1" data-label="Flujo Neto">$0</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-sm font-medium text-slate-700 flex items-center"><i class="fa-solid fa-calendar-days mr-2 text-slate-400"></i>3 Meses</td>
-                                <td class="p-3 text-sm text-emerald-600 text-right" id="proj-inc-3">$0</td>
-                                <td class="p-3 text-sm text-red-600 text-right" id="proj-exp-3">$0</td>
-                                <td class="p-3 text-sm font-bold text-right" id="proj-bal-3">$0</td>
+                                <td class="p-3 text-sm font-medium text-slate-700" data-label="Horizonte"><i class="fa-solid fa-calendar-days mr-2 text-slate-400"></i>3 Meses</td>
+                                <td class="p-3 text-sm text-emerald-600 text-right" id="proj-inc-3" data-label="Ingresos">$0</td>
+                                <td class="p-3 text-sm text-red-600 text-right" id="proj-exp-3" data-label="Gastos">$0</td>
+                                <td class="p-3 text-sm font-bold text-right" id="proj-bal-3" data-label="Flujo Neto">$0</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-sm font-medium text-slate-700 flex items-center"><i class="fa-solid fa-calendar-check mr-2 text-slate-400"></i>6 Meses</td>
-                                <td class="p-3 text-sm text-emerald-600 text-right" id="proj-inc-6">$0</td>
-                                <td class="p-3 text-sm text-red-600 text-right" id="proj-exp-6">$0</td>
-                                <td class="p-3 text-sm font-bold text-right" id="proj-bal-6">$0</td>
+                                <td class="p-3 text-sm font-medium text-slate-700" data-label="Horizonte"><i class="fa-solid fa-calendar-check mr-2 text-slate-400"></i>6 Meses</td>
+                                <td class="p-3 text-sm text-emerald-600 text-right" id="proj-inc-6" data-label="Ingresos">$0</td>
+                                <td class="p-3 text-sm text-red-600 text-right" id="proj-exp-6" data-label="Gastos">$0</td>
+                                <td class="p-3 text-sm font-bold text-right" id="proj-bal-6" data-label="Flujo Neto">$0</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-5" id="proj-recommendation-box">
+                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-5">
                     <h4 class="text-sm font-bold text-indigo-800 mb-2"><i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i>Análisis Estratégico y Recomendaciones</h4>
                     <p class="text-sm text-indigo-700 leading-relaxed" id="proj-recommendation">Analizando información histórica para generar estrategias...</p>
                 </div>
@@ -173,20 +323,19 @@
         </div>
 
         <!-- Transactions Tab -->
-        <div id="transactions" class="tab-content p-8">
-            <h2 class="text-3xl font-bold mb-6 text-slate-800">Registrar Movimiento</h2>
+        <div id="transactions" class="tab-content p-4 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-slate-800">Registrar Movimiento</h2>
             
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 max-w-3xl mb-6">
+            <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 max-w-3xl mb-6">
                 
-                <!-- AI Magic Input -->
-                <div class="mb-8 p-5 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-emerald-600 transform scale-150 group-hover:scale-110 transition-transform duration-500"><i class="fa-solid fa-wand-magic-sparkles text-6xl"></i></div>
-                    <h3 class="text-lg font-bold text-emerald-800 mb-2 relative z-10"><i class="fa-solid fa-robot mr-2"></i>Carga Mágica con IA</h3>
-                    <p class="text-sm text-emerald-700 mb-4 relative z-10">Describe tu movimiento en lenguaje natural y la Inteligencia Artificial llenará el formulario por ti.</p>
-                    <div class="flex gap-3 relative z-10">
+                <div class="mb-6 md:mb-8 p-4 md:p-5 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-emerald-600 transform scale-150 group-hover:scale-110 transition-transform duration-500 hidden md:block"><i class="fa-solid fa-wand-magic-sparkles text-6xl"></i></div>
+                    <h3 class="text-base md:text-lg font-bold text-emerald-800 mb-2 relative z-10"><i class="fa-solid fa-robot mr-2"></i>Carga Mágica con IA</h3>
+                    <p class="text-sm text-emerald-700 mb-4 relative z-10">Describe tu movimiento en lenguaje natural y la IA llenará el formulario por ti.</p>
+                    <div class="flex flex-col sm:flex-row gap-3 relative z-10">
                         <input type="text" id="ai-magic-input" placeholder="Ej: Pagué 45 lucas de luz ayer..." class="flex-1 border border-emerald-300 rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white" onkeydown="if(event.key === 'Enter'){ app.parseWithAI(); return false; }">
                         <button onclick="app.parseWithAI()" id="btn-magic-ai" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md whitespace-nowrap">
-                            Autocompletar con IA ✨
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Autocompletar
                         </button>
                     </div>
                 </div>
@@ -205,7 +354,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Monto Inicial</label>
-                            <input type="number" step="any" id="tx-amount" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" oninput="app.calculateHonorarios()">
+                            <input type="number" step="any" min="0" id="tx-amount" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" oninput="app.calculateHonorarios()">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Moneda</label>
@@ -218,18 +367,17 @@
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Fecha</label>
                             <input type="date" id="tx-date" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" onchange="app.calculateHonorarios()">
+                            <p id="date-warning" class="text-xs text-amber-600 mt-1 hidden"><i class="fa-solid fa-triangle-exclamation"></i> Fecha futura: distorsionará proyecciones.</p>
                         </div>
                     </div>
 
-                    <!-- Category (Hide if Savings) -->
                     <div class="mb-4" id="category-container">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
                         <select id="tx-category" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" onchange="app.handleCategoryChange()">
-                            <!-- Populated dynamically -->
                         </select>
                     </div>
 
-                    <!-- Honorarios Specific Fields -->
+                    <!-- Honorarios -->
                     <div id="honorarios-container" class="hidden mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                         <div class="flex justify-between items-center mb-2">
                             <h4 class="font-semibold text-emerald-800"><i class="fa-solid fa-file-invoice mr-2"></i>Calculadora Boleta de Honorarios</h4>
@@ -245,13 +393,22 @@
                                 </select>
                             </div>
                             <div class="bg-white p-3 rounded-lg border border-emerald-200 flex flex-col justify-center">
+                                <div class="flex justify-between text-xs mb-1"><span class="text-slate-500">Bruto:</span> <span id="hon-calc-bruto" class="font-bold text-slate-700">$0</span></div>
                                 <div class="flex justify-between text-xs mb-1"><span class="text-slate-500">Retención Legal:</span> <span id="hon-calc-ret" class="font-bold text-red-500">$0</span></div>
                                 <div class="flex justify-between text-xs"><span class="text-slate-500">Flujo Líquido Real:</span> <span id="hon-calc-liq" class="font-bold text-emerald-600">$0</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Deductible (Only for Expense) -->
+                    <!-- IVA (gastos) -->
+                    <div class="mb-4 hidden" id="iva-container">
+                        <label class="flex items-center space-x-2 text-slate-700 cursor-pointer bg-blue-50 p-3 rounded border border-blue-200">
+                            <input type="checkbox" id="tx-iva" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4" onchange="app.handleIvaToggle()">
+                            <span class="text-sm">Documento afecto a IVA (con factura)</span>
+                            <span id="iva-info" class="hidden ml-auto text-xs text-blue-700">Neto: <strong id="iva-neto">$0</strong> | IVA crédito: <strong id="iva-monto">$0</strong></span>
+                        </label>
+                    </div>
+
                     <div class="mb-4 text-sm bg-slate-50 p-3 rounded border border-slate-200 hidden" id="tax-deductible-container">
                         <label class="flex items-center space-x-2 text-slate-700 cursor-pointer">
                             <input type="checkbox" id="tx-deductible" class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4">
@@ -259,7 +416,7 @@
                         </label>
                     </div>
 
-                    <!-- Savings Specific Fields -->
+                    <!-- Savings -->
                     <div id="savings-container" class="hidden mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
                         <h4 class="font-semibold text-blue-800 mb-3"><i class="fa-solid fa-piggy-bank mr-2"></i>Detalles del Instrumento de Ahorro</h4>
                         
@@ -272,15 +429,13 @@
                             </select>
                         </div>
 
-                        <!-- DAP Fields -->
                         <div id="fields-dap" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Tasa de Interés Anual (%)</label>
-                                <input type="number" step="0.01" id="tx-dap-rate" placeholder="Ej. 6.5" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500">
+                                <input type="number" step="0.01" min="0" id="tx-dap-rate" placeholder="Ej. 6.5" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
 
-                        <!-- APV Fields -->
                         <div id="fields-apv" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Régimen Tributario APV</label>
@@ -289,9 +444,18 @@
                                     <option value="B">Régimen B (Rebaja Base Imponible)</option>
                                 </select>
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Fondo APV</label>
+                                <select id="tx-apv-fund" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500">
+                                    <option value="A">Fondo A</option>
+                                    <option value="B">Fondo B</option>
+                                    <option value="C" selected>Fondo C</option>
+                                    <option value="D">Fondo D</option>
+                                    <option value="E">Fondo E</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <!-- Cuenta 2 Fields -->
                         <div id="fields-cuenta2" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">AFP</label>
@@ -323,21 +487,21 @@
                         <input type="text" id="tx-description" placeholder="Ej. Venta de servicios, DAP Banco Estado..." class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                     </div>
 
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="app.resetForm()" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">Cancelar</button>
-                        <button type="submit" id="btn-save-tx" class="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">Guardar Registro</button>
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                        <button type="button" onclick="app.resetForm()" class="px-5 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Cancelar</button>
+                        <button type="submit" id="btn-save-tx" class="px-5 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">Guardar Registro</button>
                     </div>
                 </form>
             </div>
         </div>
 
         <!-- History Tab -->
-        <div id="history" class="tab-content p-8">
-            <h2 class="text-3xl font-bold mb-6 text-slate-800">Historial de Movimientos</h2>
+        <div id="history" class="tab-content p-4 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-slate-800">Historial de Movimientos</h2>
             
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+            <div class="bg-white md:rounded-xl md:shadow-sm md:border md:border-slate-100 md:overflow-hidden -mx-4 md:mx-0">
+                <div class="md:overflow-x-auto">
+                    <table class="w-full text-left border-collapse responsive-table">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200">
                                 <th class="p-4 text-sm font-semibold text-slate-600">Fecha</th>
@@ -349,8 +513,7 @@
                                 <th class="p-4 text-sm font-semibold text-slate-600 text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="history-table-body" class="divide-y divide-slate-100">
-                            <!-- Rows rendered via JS -->
+                        <tbody id="history-table-body" class="divide-y divide-slate-100 px-4 md:px-0">
                         </tbody>
                     </table>
                 </div>
@@ -358,184 +521,184 @@
         </div>
 
         <!-- Indicators Tab -->
-        <div id="indicators" class="tab-content p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-slate-800">Indicadores Económicos (Chile)</h2>
-                <button onclick="app.fetchIndicators()" class="text-sm bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition">
+        <div id="indicators" class="tab-content p-4 md:p-8">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 md:mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800">Indicadores Económicos</h2>
+                <button onclick="app.fetchIndicators()" class="text-sm bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-lg hover:bg-indigo-200 transition self-start sm:self-auto">
                     <i class="fa-solid fa-rotate-right mr-1"></i> Actualizar
                 </button>
             </div>
             
-            <p class="text-slate-500 mb-8">Datos obtenidos en tiempo real. Los montos en UF y USD, así como la rentabilidad de tus ahorros, se proyectan utilizando estos valores.</p>
+            <p class="text-slate-500 mb-6 md:mb-8 text-sm md:text-base">Datos obtenidos en tiempo real desde mindicador.cl. La UTA se obtiene del SII (UTM × 12).</p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-blue-500">
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-blue-500">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-slate-700">Unidad de Fomento (UF)</h3>
                         <i class="fa-solid fa-building text-blue-400 text-xl"></i>
                     </div>
-                    <p class="text-3xl font-bold text-slate-800" id="ind-uf">Cargando...</p>
+                    <p class="text-2xl md:text-3xl font-bold text-slate-800" id="ind-uf">Cargando...</p>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-emerald-500">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-emerald-500">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-slate-700">Dólar Observado</h3>
                         <i class="fa-solid fa-dollar-sign text-emerald-400 text-xl"></i>
                     </div>
-                    <p class="text-3xl font-bold text-slate-800" id="ind-usd">Cargando...</p>
+                    <p class="text-2xl md:text-3xl font-bold text-slate-800" id="ind-usd">Cargando...</p>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-orange-500">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-orange-500">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-slate-700">Inflación Anualizada (IPC)</h3>
                         <i class="fa-solid fa-arrow-trend-up text-orange-400 text-xl"></i>
                     </div>
-                    <p class="text-3xl font-bold text-slate-800" id="ind-ipc">Cargando...</p>
+                    <p class="text-2xl md:text-3xl font-bold text-slate-800" id="ind-ipc">Cargando...</p>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-purple-500">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-purple-500">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-slate-700">Tasa Política Monetaria</h3>
                         <i class="fa-solid fa-building-columns text-purple-400 text-xl"></i>
                     </div>
-                    <p class="text-3xl font-bold text-slate-800" id="ind-tpm">Cargando...</p>
+                    <p class="text-2xl md:text-3xl font-bold text-slate-800" id="ind-tpm">Cargando...</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-pink-500">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-slate-700">UTM (mes actual)</h3>
+                        <i class="fa-solid fa-receipt text-pink-400 text-xl"></i>
+                    </div>
+                    <p class="text-2xl md:text-3xl font-bold text-slate-800" id="ind-utm">Cargando...</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-rose-500">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-slate-700">UTA (Diciembre AT)</h3>
+                        <i class="fa-solid fa-calendar-day text-rose-400 text-xl"></i>
+                    </div>
+                    <p class="text-2xl md:text-3xl font-bold text-slate-800" id="ind-uta">Cargando...</p>
+                    <p class="text-xs text-slate-500 mt-1">Base para tramos IGC del AT vigente</p>
                 </div>
             </div>
         </div>
 
-        <!-- Financial Coach Tab -->
-        <div id="coach" class="tab-content p-8">
+        <!-- Coach -->
+        <div id="coach" class="tab-content p-4 md:p-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div>
-                    <h2 class="text-3xl font-bold text-slate-800"><i class="fa-solid fa-user-graduate text-indigo-600 mr-2"></i>Coach Financiero & Tributario</h2>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-user-graduate text-indigo-600 mr-2"></i>Coach Financiero & Tributario</h2>
                     <p class="text-slate-500 mt-1">Análisis integral de Ahorro, Inversión y Legislación Chilena Vigente.</p>
                 </div>
                 
-                <!-- AI Coach Button -->
-                <button onclick="app.generateAIReport()" id="btn-ai-coach" class="mt-4 md:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center">
-                    <i class="fa-solid fa-brain mr-2"></i> Generar Análisis Profundo con IA ✨
+                <button onclick="app.generateAIReport()" id="btn-ai-coach" class="w-full md:w-auto mt-4 md:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center justify-center">
+                    <i class="fa-solid fa-brain mr-2"></i> <span class="md:hidden">Análisis con IA ✨</span><span class="hidden md:inline">Generar Análisis Profundo con IA ✨</span>
                 </button>
             </div>
 
-            <!-- AI Generative Output Container -->
             <div id="ai-report-container" class="hidden mb-8 bg-white rounded-2xl shadow-md border border-purple-100 overflow-hidden relative">
                 <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 border-b border-purple-100 flex justify-between items-center">
-                    <h3 class="font-bold text-indigo-900"><i class="fa-solid fa-wand-magic-sparkles text-purple-600 mr-2"></i>Reporte Personalizado de Gemini AI</h3>
+                    <h3 class="font-bold text-indigo-900"><i class="fa-solid fa-wand-magic-sparkles text-purple-600 mr-2"></i>Reporte Personalizado</h3>
                     <button onclick="document.getElementById('ai-report-container').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times"></i></button>
                 </div>
-                <div id="ai-report-content" class="p-6 text-slate-700 leading-relaxed prose prose-indigo max-w-none">
-                    <!-- Content injected here -->
+                <div id="ai-report-content" class="p-4 md:p-6 text-slate-700 leading-relaxed prose prose-indigo max-w-none">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                <!-- Savings & Investment Diagnosis -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-blue-500">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-blue-500">
                     <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-arrow-trend-up mr-2 text-blue-500"></i>Estrategia de Ahorro e Inversión (Base)</h3>
-                    <div id="coach-investment-analysis" class="text-slate-600 space-y-4">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <div id="coach-investment-analysis" class="text-slate-600 space-y-4"></div>
                 </div>
 
-                <!-- Tax Advice -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-emerald-500">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-emerald-500">
                     <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-landmark mr-2 text-emerald-500"></i>Optimización Tributaria</h3>
-                    <div id="coach-tax-analysis" class="text-slate-600 space-y-4">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <div id="coach-tax-analysis" class="text-slate-600 space-y-4"></div>
                 </div>
 
-                <!-- Simulador de Impuestos -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-red-500 lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-red-500 lg:col-span-2">
                     <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-calculator mr-2 text-red-500"></i>Simulador de Impuestos (Proyección Anual)</h3>
-                    <div id="coach-tax-simulator" class="text-slate-600 space-y-3">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <div id="coach-tax-simulator" class="text-slate-600 space-y-3"></div>
                 </div>
 
-                <!-- Operating Cashflow -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 border-t-4 border-t-indigo-500 lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-indigo-500 lg:col-span-2">
                     <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-wallet mr-2 text-indigo-500"></i>Flujo de Caja Operativo (Mes Actual)</h3>
-                    <div id="coach-savings-analysis" class="text-slate-600 space-y-3">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <div id="coach-savings-analysis" class="text-slate-600 space-y-3"></div>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center">
+    </div><!-- /lg:flex wrapper -->
+
+    <div id="toast" class="fixed bottom-4 left-4 right-4 lg:left-auto lg:right-4 lg:max-w-md bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center justify-center lg:justify-start">
         <i id="toast-icon" class="mr-3"></i>
         <span id="toast-message">Mensaje</span>
     </div>
 
     <script>
-        // --- CONFIGURATION TI GOOGLE SHEETS API ---
-        // 1. I-paste ditoy ti URL ti Web App mo iti Google Apps Script
+        // ============================================================
+        // CONFIGURACIÓN
+        // ============================================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6sfFu_oFDeDa4AjFgyLBMmCVDNCz8AYiEJSv6Vzx09ikE8dgetfWDcenZAAmmGklAdQ/exec";
+        const CACHE_KEY = 'finansmart_tx_cache_v2';
+        const RATES_CACHE_KEY = 'finansmart_rates_cache_v2';
+        
+        // Las llamadas a Gemini pasan por el Apps Script (proxy), que mantiene la API Key
+        // en propiedades del script. El frontend nunca ve la key.
 
-        // --- CONFIGURATION TI GEMINI API ---
-        const apiKey = ""; // API Key a naipaay iti aglawlaw
-        const geminiModel = "gemini-2.5-flash-preview-09-2025";
+        // ============================================================
+        // CONSTANTES TRIBUTARIAS (LIR + Circulares SII vigentes)
+        // ============================================================
+        
+        // Tramos del Impuesto Global Complementario expresados en UTA
+        // Fuente: Art. 52 LIR. Tramos en UTA + tasa marginal + factor de rebaja en UTA
+        const IGC_BRACKETS_UTA = [
+            { upTo: 13.5,  rate: 0.000, deduction: 0.000  },
+            { upTo: 30.0,  rate: 0.040, deduction: 0.540  },
+            { upTo: 50.0,  rate: 0.080, deduction: 1.740  },
+            { upTo: 70.0,  rate: 0.135, deduction: 4.490  },
+            { upTo: 90.0,  rate: 0.230, deduction: 11.140 },
+            { upTo: 120.0, rate: 0.304, deduction: 17.800 },
+            { upTo: 310.0, rate: 0.350, deduction: 23.320 },
+            { upTo: Infinity, rate: 0.400, deduction: 38.820 }
+        ];
 
-        // Function Helper tapno maawagan ti Gemini
-        async function fetchGemini(prompt, config = {}) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }]
-            };
-            
-            if (config.systemInstruction) {
-                payload.systemInstruction = { parts: [{ text: config.systemInstruction }] };
+        // Tasa IDPC Pro Pyme 14D N°3 - Ley 21.755 / Circular SII N°53 de 2025
+        // 12.5% para AC 2025, 2026, 2027 / 15% para AC 2028 / 25% permanente desde AC 2029
+        function getIDPCRate(commercialYear) {
+            if (commercialYear >= 2025 && commercialYear <= 2027) return 0.125;
+            if (commercialYear === 2028) return 0.15;
+            if (commercialYear < 2025) {
+                // Histórico: 10% (2023), 12.5% (2024) por Ley 21.578
+                if (commercialYear === 2023) return 0.10;
+                if (commercialYear === 2024) return 0.125;
+                return 0.25;
             }
-            if (config.jsonSchema) {
-                payload.generationConfig = {
-                    responseMimeType: "application/json",
-                    responseSchema: config.jsonSchema
-                };
-            }
-
-            let retries = 5;
-            let delay = 1000;
-            
-            while (retries > 0) {
-                try {
-                    const response = await fetch(url, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify(payload) 
-                    });
-                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
-                    const data = await response.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    
-                    if (!text) throw new Error('No content from API');
-                    
-                    return config.jsonSchema ? JSON.parse(text) : text;
-                } catch (err) {
-                    console.error("Gemini API Error, retrying...", err);
-                    retries--;
-                    if (retries === 0) {
-                        app.showToast('Error al conectar con la IA. Intenta nuevamente.', 'error');
-                        throw err;
-                    }
-                    await new Promise(r => setTimeout(r, delay));
-                    delay *= 2;
-                }
-            }
+            return 0.25; // Permanente
         }
 
-        // --- CONSTANTS PARA TI SIMULATION ---
-        const FUND_RATES = {
-            'A': 8.5, 'B': 7.0, 'C': 5.5, 'D': 4.0, 'E': 3.0
-        };
+        // Retención boletas honorarios - Ley 21.133 (progresiva)
+        function getHonorariosRate(dateStr) {
+            if (!dateStr) return 17.0;
+            const year = new Date(dateStr).getFullYear();
+            if (year <= 2019) return 10.0;
+            const rates = { 2020: 10.75, 2021: 11.5, 2022: 12.25, 2023: 13.0, 2024: 13.75, 2025: 14.5, 2026: 15.25, 2027: 16.0, 2028: 16.75 };
+            return rates[year] || 17.0;
+        }
 
-        // --- KASAAD TI DATOS ---
+        // Rentabilidad histórica anual referencial por fondo (no es proyección oficial)
+        const FUND_RATES = { 'A': 8.5, 'B': 7.0, 'C': 5.5, 'D': 4.0, 'E': 3.0 };
+
+        // IVA Chile
+        const IVA_RATE = 0.19;
+
+        // ============================================================
+        // ESTADO
+        // ============================================================
         const appState = {
-            transactions: [], // Saan tayon nga agus-usar ti padpadas a datos, mapunno daytoy a dinamiko manipud iti Google Sheets
+            transactions: [],
             categories: {
                 income: ['Sueldo', 'Ventas', 'Honorarios', 'Dividendos', 'Otros Ingresos'],
                 expense: ['Arriendo', 'Servicios Básicos', 'Alimentación', 'Transporte', 'Insumos', 'Sueldos Personal', 'Marketing', 'Impuestos', 'Ocio', 'Otros Gastos'],
@@ -543,45 +706,350 @@
             },
             currentTxType: 'income',
             rates: {
-                uf: 38500, // Fallback
-                usd: 950, // Fallback
-                ipc: 4.5, // Fallback inflacion anual
-                tpm: 5.5
+                uf: 39000,
+                usd: 950,
+                ipc: 4.0,
+                tpm: 4.75,
+                utm: 70588,    // Mayo 2026 (referencial; se actualiza)
+                utaDic: 834504 // UTA Diciembre 2025 (base para tramos AT 2026)
             },
-            charts: {
-                evolution: null,
-                category: null,
-                vs: null
-            }
+            ratesLoaded: false,
+            charts: { evolution: null, category: null, vs: null }
         };
 
-        // --- LOHIKA TI APP ---
+        // ============================================================
+        // HELPERS DE FORMATO Y NÚMEROS
+        // ============================================================
+        function safeFloat(v, fallback = 0) {
+            const n = parseFloat(v);
+            return isNaN(n) || !isFinite(n) ? fallback : n;
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(safeFloat(amount));
+        }
+
+        function formatOtherCurrency(amount, currency) {
+            return new Intl.NumberFormat('es-CL', { style: 'decimal', maximumFractionDigits: 2 }).format(safeFloat(amount)) + ` ${currency}`;
+        }
+
+        // ============================================================
+        // PROXY HELPER - Llama al Apps Script en lugar de Gemini directamente
+        // ============================================================
+        // El Apps Script enruta la acción al handler correspondiente y mantiene
+        // la API Key de Gemini segura en propiedades del script.
+        async function callProxy(action, body = {}) {
+            if (SCRIPT_URL.includes("PEGAR_AQUI")) {
+                throw new Error("URL del Apps Script no configurada");
+            }
+            
+            let retries = 3;
+            let delay = 1000;
+            let lastError = null;
+            
+            while (retries > 0) {
+                try {
+                    // text/plain evita preflight CORS (igual que el CRUD legacy)
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action, ...body })
+                    });
+                    
+                    if (!response.ok) throw new Error(`Proxy HTTP ${response.status}`);
+                    
+                    const text = await response.text();
+                    if (text.trim().startsWith('<')) {
+                        throw new Error("Apps Script devolvió HTML (revisa permisos de despliegue)");
+                    }
+                    
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseErr) {
+                        throw new Error("Respuesta del proxy no es JSON válido: " + text.substring(0, 150));
+                    }
+                    
+                    // Si el servidor devolvió un error explícito, no reintentamos
+                    // (el error es del lado servidor, reintentar no ayuda)
+                    if (data.error) {
+                        const serverError = new Error(data.error);
+                        serverError.isServerError = true;
+                        throw serverError;
+                    }
+                    return data;
+                } catch (err) {
+                    lastError = err;
+                    console.error(`Proxy error (intento ${4 - retries}/3):`, err);
+                    
+                    // No reintentar errores explícitos del servidor (404, validación, etc.)
+                    if (err.isServerError) {
+                        throw err;
+                    }
+                    
+                    retries--;
+                    if (retries > 0) {
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2;
+                    }
+                }
+            }
+            throw lastError;
+        }
+
+        // ============================================================
+        // APP PRINCIPAL
+        // ============================================================
         const app = {
             async init() {
                 this.initDate();
                 this.setTxType('income');
+                
+                // 1. Cargar caché local primero (UX rápida)
+                this.loadFromCache();
+                this.renderAll();
+                
+                // 2. Cargar tasas e indicadores (con fallback a caché)
                 await this.fetchIndicators();
-                await this.fetchTransactions(); // I-download ti database no mangrugi
+                
+                // 3. Sincronizar con Sheets en background
+                await this.fetchTransactions();
+                
+                this.renderAll();
+            },
+
+            renderAll() {
+                this.renderDashboard();
+                this.renderHistory();
+                this.updateCoach();
+                this.renderIndicators();
+            },
+
+            // -------- CACHE LOCAL (mejora #10) --------
+            loadFromCache() {
+                try {
+                    const cached = localStorage.getItem(CACHE_KEY);
+                    if (cached) {
+                        appState.transactions = JSON.parse(cached);
+                        document.getElementById('cache-status').className = 'text-emerald-400';
+                    }
+                    const cachedRates = localStorage.getItem(RATES_CACHE_KEY);
+                    if (cachedRates) {
+                        const r = JSON.parse(cachedRates);
+                        // Solo usar si tiene menos de 24h
+                        if (r.ts && (Date.now() - r.ts) < 86400000) {
+                            Object.assign(appState.rates, r.rates);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Cache local no disponible:', e);
+                }
+            },
+
+            saveToCache() {
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(appState.transactions));
+                    document.getElementById('cache-status').className = 'text-emerald-400';
+                } catch (e) {
+                    console.warn('No se pudo escribir caché:', e);
+                    document.getElementById('cache-status').className = 'text-amber-400';
+                }
+            },
+
+            saveRatesToCache() {
+                try {
+                    localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ ts: Date.now(), rates: appState.rates }));
+                } catch (e) { /* noop */ }
+            },
+
+            // -------- TASAS E INDICADORES (mejora #8 + UTM/UTA) --------
+            async fetchIndicators() {
+                try {
+                    const response = await fetch('https://mindicador.cl/api');
+                    if (!response.ok) throw new Error('API request failed');
+                    const data = await response.json();
+                    
+                    appState.rates.uf = safeFloat(data.uf?.valor, appState.rates.uf);
+                    appState.rates.usd = safeFloat(data.dolar?.valor, appState.rates.usd);
+                    appState.rates.tpm = safeFloat(data.tpm?.valor, appState.rates.tpm);
+                    appState.rates.utm = safeFloat(data.utm?.valor, appState.rates.utm);
+                    
+                    // FIX bug #8: usar IPC real de la API
+                    if (data.ipc?.valor) {
+                        appState.rates.ipc = safeFloat(data.ipc.valor, appState.rates.ipc);
+                    }
+                    
+                    appState.ratesLoaded = true;
+                    this.saveRatesToCache();
+                    this.showToast('Indicadores actualizados', 'success');
+                } catch (error) {
+                    console.error('Error fetching indicators, using fallbacks:', error);
+                    this.showToast('Usando indicadores en caché', 'warn');
+                }
+                
+                this.renderIndicators();
                 this.renderDashboard();
                 this.renderHistory();
                 this.updateCoach();
             },
 
-            // Lógica de Tasas para Boletas de Honorarios (Ley N° 21.133)
-            getHonorariosRate(dateStr) {
-                if (!dateStr) return 15.25; // Por defecto 2026
-                const year = new Date(dateStr).getFullYear();
-                if (year <= 2019) return 10.0;
-                if (year === 2020) return 10.75;
-                if (year === 2021) return 11.5;
-                if (year === 2022) return 12.25;
-                if (year === 2023) return 13.0;
-                if (year === 2024) return 13.75;
-                if (year === 2025) return 14.50;
-                if (year === 2026) return 15.25;
-                if (year === 2027) return 16.00;
-                if (year === 2028) return 16.75;
-                return 17.00; // 2029 en adelante se estanca en 17%
+            renderIndicators() {
+                document.getElementById('ind-uf').innerText = formatCurrency(appState.rates.uf);
+                document.getElementById('ind-usd').innerText = formatCurrency(appState.rates.usd);
+                document.getElementById('ind-ipc').innerText = `${safeFloat(appState.rates.ipc).toFixed(1)}%`;
+                document.getElementById('ind-tpm').innerText = `${safeFloat(appState.rates.tpm).toFixed(2)}%`;
+                document.getElementById('ind-utm').innerText = formatCurrency(appState.rates.utm);
+                document.getElementById('ind-uta').innerText = formatCurrency(appState.rates.utaDic);
+            },
+
+            // -------- SINCRONIZACIÓN CON SHEETS --------
+            async fetchTransactions() {
+                try {
+                    if (SCRIPT_URL.includes("PEGAR_AQUI")) {
+                        document.getElementById('sync-status').className = 'text-slate-500';
+                        return;
+                    }
+                    document.getElementById('sync-status').className = 'text-amber-400';
+                    
+                    const response = await fetch(SCRIPT_URL, { method: 'GET', redirect: 'follow' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const textData = await response.text();
+                    if (textData.trim().startsWith('<')) {
+                        throw new Error("Apps Script devolvió HTML. Revisa permisos de despliegue.");
+                    }
+                    
+                    const data = JSON.parse(textData);
+                    if (Array.isArray(data)) {
+                        appState.transactions = data;
+                        this.saveToCache();
+                        document.getElementById('sync-status').className = 'text-emerald-400';
+                    }
+                } catch (error) {
+                    console.error('Error fetching:', error);
+                    document.getElementById('sync-status').className = 'text-red-400';
+                    this.showToast('Trabajando offline (caché local)', 'warn');
+                }
+            },
+
+            handleRegimeChange() {
+                this.updateCoach();
+                this.setTxType(appState.currentTxType);
+            },
+
+            initDate() {
+                document.getElementById('tx-date').valueAsDate = new Date();
+            },
+
+            // Wrapper público para uso desde HTML inline
+            formatCurrency(v) { return formatCurrency(v); },
+
+            // -------- CONVERSIÓN DE MONEDA --------
+            getBaseAmountInCLP(tx) {
+                const amt = safeFloat(tx.originalAmount);
+                if (tx.currency === 'UF') return amt * appState.rates.uf;
+                if (tx.currency === 'USD') return amt * appState.rates.usd;
+                return amt;
+            },
+
+            // ============================================================
+            // FIX CRÍTICO #2: IGC en UTA (correcto y autoajustable)
+            // ============================================================
+            // Calcula el IGC sobre la base imponible en pesos, usando los tramos
+            // expresados en UTA (Art. 52 LIR). Fuente: Circular SII N°67/2025.
+            // Tramos en UTA, tasa marginal y factor de rebaja en UTA, multiplicado
+            // por la UTA de diciembre del AT correspondiente.
+            // ------------------------------------------------------------
+            calculateIGC(baseCLP) {
+                const uta = safeFloat(appState.rates.utaDic, 834504);
+                if (uta <= 0 || baseCLP <= 0) return 0;
+                
+                const baseUTA = baseCLP / uta;
+                
+                for (const bracket of IGC_BRACKETS_UTA) {
+                    if (baseUTA <= bracket.upTo) {
+                        const impuestoUTA = (baseUTA * bracket.rate) - bracket.deduction;
+                        return Math.max(0, impuestoUTA * uta);
+                    }
+                }
+                return 0;
+            },
+
+            // Determina el tramo (para mostrar al usuario)
+            getIGCBracket(baseCLP) {
+                const uta = safeFloat(appState.rates.utaDic, 834504);
+                if (uta <= 0) return null;
+                const baseUTA = baseCLP / uta;
+                for (let i = 0; i < IGC_BRACKETS_UTA.length; i++) {
+                    if (baseUTA <= IGC_BRACKETS_UTA[i].upTo) {
+                        return { index: i, rate: IGC_BRACKETS_UTA[i].rate, baseUTA };
+                    }
+                }
+                return null;
+            },
+
+            // -------- VALOR ESTIMADO ACTUAL (mejora #7) --------
+            getEstimatedCurrentValue(tx) {
+                const baseCLP = this.getBaseAmountInCLP(tx);
+                if (tx.type !== 'savings') return baseCLP;
+
+                const txDate = new Date(tx.date);
+                if (isNaN(txDate.getTime())) return baseCLP;
+                
+                const today = new Date();
+                const daysElapsed = Math.max(0, (today - txDate) / (1000 * 60 * 60 * 24));
+                const yearsElapsed = daysElapsed / 365;
+
+                let annualRate = 0;
+                if (tx.savingsType === 'dap') annualRate = safeFloat(tx.dapRate);
+                else if (tx.savingsType === 'cuenta2') annualRate = FUND_RATES[tx.c2Fund] || 0;
+                else if (tx.savingsType === 'apv') {
+                    // FIX mejora #7: usar fondo seleccionado en vez de hardcodear 5%
+                    annualRate = FUND_RATES[tx.apvFund] || FUND_RATES['C'];
+                }
+
+                return baseCLP * Math.pow(1 + (annualRate / 100), yearsElapsed);
+            },
+
+            // -------- FORMULARIO --------
+            calculateHonorarios() {
+                const type = document.getElementById('tx-type').value;
+                const category = document.getElementById('tx-category').value;
+                
+                // Validación de fecha futura (mejora #15)
+                const dateInput = document.getElementById('tx-date').value;
+                if (dateInput) {
+                    const txDate = new Date(dateInput);
+                    const today = new Date();
+                    today.setHours(23, 59, 59);
+                    document.getElementById('date-warning').classList.toggle('hidden', txDate <= today);
+                }
+                
+                if (type !== 'income' || category !== 'Honorarios') return;
+
+                const amountInput = safeFloat(document.getElementById('tx-amount').value);
+                const inputType = document.getElementById('hon-input-type').value;
+                
+                const rate = getHonorariosRate(dateInput);
+                const year = dateInput ? new Date(dateInput).getFullYear() : 2026;
+                document.getElementById('hon-rate-badge').innerText = `${rate}% (${year})`;
+                
+                let bruto = 0, liquido = 0, retencion = 0;
+                
+                if (inputType === 'bruto') {
+                    bruto = amountInput;
+                    retencion = bruto * (rate / 100);
+                    liquido = bruto - retencion;
+                } else {
+                    liquido = amountInput;
+                    bruto = liquido / (1 - (rate / 100));
+                    retencion = bruto - liquido;
+                }
+                
+                document.getElementById('hon-calc-bruto').innerText = formatCurrency(bruto);
+                document.getElementById('hon-calc-ret').innerText = formatCurrency(retencion);
+                document.getElementById('hon-calc-liq').innerText = formatCurrency(liquido);
             },
 
             handleCategoryChange() {
@@ -597,216 +1065,42 @@
                 }
             },
 
-            calculateHonorarios() {
-                const type = document.getElementById('tx-type').value;
-                const category = document.getElementById('tx-category').value;
-                if (type !== 'income' || category !== 'Honorarios') return;
-
-                const amountInput = parseFloat(document.getElementById('tx-amount').value) || 0;
-                const dateInput = document.getElementById('tx-date').value;
-                const inputType = document.getElementById('hon-input-type').value;
-                
-                const rate = this.getHonorariosRate(dateInput);
-                const year = dateInput ? new Date(dateInput).getFullYear() : 2026;
-                document.getElementById('hon-rate-badge').innerText = `${rate}% (${year})`;
-                
-                let bruto = 0;
-                let liquido = 0;
-                let retencion = 0;
-                
-                if (inputType === 'bruto') {
-                    bruto = amountInput;
-                    retencion = bruto * (rate / 100);
-                    liquido = bruto - retencion;
-                } else {
-                    liquido = amountInput;
-                    bruto = liquido / (1 - (rate / 100));
-                    retencion = bruto - liquido;
+            handleIvaToggle() {
+                const checked = document.getElementById('tx-iva').checked;
+                const amount = safeFloat(document.getElementById('tx-amount').value);
+                document.getElementById('iva-info').classList.toggle('hidden', !checked);
+                if (checked && amount > 0) {
+                    // Asume monto total (con IVA) → calcula neto e IVA
+                    const neto = amount / (1 + IVA_RATE);
+                    const iva = amount - neto;
+                    document.getElementById('iva-neto').innerText = formatCurrency(neto);
+                    document.getElementById('iva-monto').innerText = formatCurrency(iva);
                 }
-                
-                document.getElementById('hon-calc-ret').innerText = this.formatCurrency(retencion);
-                document.getElementById('hon-calc-liq').innerText = this.formatCurrency(liquido);
-            },
-
-            async fetchTransactions() {
-                try {
-                    if(SCRIPT_URL === "PEGAR_AQUI_TU_URL_DE_APPS_SCRIPT") {
-                        console.warn("Conexión a Sheets inactiva. URL de Apps Script no configurada.");
-                        return;
-                    }
-                    this.showToast('Cargando base de datos...', 'success');
-                    
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'GET',
-                        redirect: 'follow'
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const textData = await response.text();
-                    
-                    // Comprobar si Google devolvió una página de error/login en lugar de JSON
-                    if (textData.trim().startsWith('<')) {
-                        throw new Error("Apps Script devolvió HTML. Verifica que el despliegue esté configurado para 'Cualquier persona' (Anyone).");
-                    }
-                    
-                    const data = JSON.parse(textData);
-                    appState.transactions = data;
-                    this.showToast('Datos sincronizados con Google Sheets', 'success');
-                } catch (error) {
-                    console.error('Error fetching transactions:', error);
-                    this.showToast('Error conectando a Sheets. Verifica los permisos de acceso.', 'error');
-                }
-            },
-
-            handleRegimeChange() {
-                this.updateCoach();
-                this.setTxType(appState.currentTxType);
-            },
-
-            async fetchIndicators() {
-                try {
-                    const response = await fetch('https://mindicador.cl/api');
-                    if (!response.ok) throw new Error('API request failed');
-                    const data = await response.json();
-                    
-                    appState.rates.uf = data.uf.valor;
-                    appState.rates.usd = data.dolar.valor;
-                    appState.rates.tpm = data.tpm.valor;
-                    appState.rates.ipc = 4.2; 
-                    
-                    this.showToast('Indicadores económicos actualizados');
-                } catch (error) {
-                    console.error('Error fetching indicators, using fallbacks:', error);
-                }
-                
-                this.renderIndicators();
-                this.renderDashboard();
-                this.renderHistory();
-                this.updateCoach();
-            },
-
-            renderIndicators() {
-                document.getElementById('ind-uf').innerText = this.formatCurrency(appState.rates.uf);
-                document.getElementById('ind-usd').innerText = this.formatCurrency(appState.rates.usd);
-                document.getElementById('ind-ipc').innerText = `${appState.rates.ipc}%`;
-                document.getElementById('ind-tpm').innerText = `${appState.rates.tpm}%`;
-            },
-
-            initDate() {
-                document.getElementById('tx-date').valueAsDate = new Date();
-            },
-
-            formatCurrency(amount) {
-                return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
-            },
-            
-            formatOtherCurrency(amount, currency) {
-                return new Intl.NumberFormat('es-CL', { style: 'decimal', maximumFractionDigits: 2 }).format(amount) + ` ${currency}`;
-            },
-
-            getBaseAmountInCLP(tx) {
-                if (tx.currency === 'UF') return tx.originalAmount * appState.rates.uf;
-                if (tx.currency === 'USD') return tx.originalAmount * appState.rates.usd;
-                return tx.originalAmount;
-            },
-
-            // Calcula el Impuesto Global Complementario (Tramos referenciales simplificados)
-            calculateIGC(baseCLP) {
-                if (baseCLP <= 12636000) return 0; // Exento
-                if (baseCLP <= 28080000) return (baseCLP * 0.04) - 505440;
-                if (baseCLP <= 46800000) return (baseCLP * 0.08) - 1628640;
-                if (baseCLP <= 65520000) return (baseCLP * 0.135) - 4202640;
-                if (baseCLP <= 84240000) return (baseCLP * 0.23) - 10427040;
-                if (baseCLP <= 112320000) return (baseCLP * 0.304) - 16660800;
-                if (baseCLP <= 290160000) return (baseCLP * 0.35) - 21828720;
-                return (baseCLP * 0.40) - 36336720;
-            },
-
-            getEstimatedCurrentValue(tx) {
-                const baseCLP = this.getBaseAmountInCLP(tx);
-                if (tx.type !== 'savings') return baseCLP;
-
-                const txDate = new Date(tx.date);
-                const today = new Date();
-                const daysElapsed = Math.max(0, (today - txDate) / (1000 * 60 * 60 * 24));
-                const yearsElapsed = daysElapsed / 365;
-
-                let annualRate = 0;
-                if (tx.savingsType === 'dap') annualRate = parseFloat(tx.dapRate) || 0;
-                else if (tx.savingsType === 'cuenta2') annualRate = FUND_RATES[tx.c2Fund] || 0;
-                else if (tx.savingsType === 'apv') annualRate = 5.0; 
-
-                return baseCLP * Math.pow(1 + (annualRate / 100), yearsElapsed);
-            },
-
-            showToast(message, type = 'success') {
-                const toast = document.getElementById('toast');
-                const icon = document.getElementById('toast-icon');
-                document.getElementById('toast-message').innerText = message;
-                
-                toast.className = `fixed bottom-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50 flex items-center ${type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`;
-                icon.className = type === 'success' ? 'fa-solid fa-check-circle mr-3' : 'fa-solid fa-exclamation-circle mr-3';
-                
-                toast.classList.remove('translate-y-20', 'opacity-0');
-                
-                setTimeout(() => {
-                    toast.classList.add('translate-y-20', 'opacity-0');
-                }, 3000);
-            },
-
-            switchTab(tabId) {
-                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-                
-                document.querySelectorAll('.nav-link').forEach(el => {
-                    el.classList.remove('text-emerald-400', 'bg-slate-800', 'border-emerald-400');
-                    el.classList.add('border-transparent');
-                    if (el.dataset.tab === tabId) {
-                        el.classList.add('text-emerald-400', 'bg-slate-800', 'border-emerald-400');
-                        el.classList.remove('border-transparent');
-                    }
-                });
-
-                if(tabId === 'dashboard') this.renderDashboard();
-                if(tabId === 'history') this.renderHistory();
-                if(tabId === 'coach') this.updateCoach();
-                if(tabId === 'indicators') this.renderIndicators();
             },
 
             setTxType(type) {
                 appState.currentTxType = type;
                 document.getElementById('tx-type').value = type;
                 
-                const btnClasses = {
-                    income: 'px-4 py-2 font-semibold text-slate-500 hover:text-emerald-500 border-b-2 border-transparent',
-                    expense: 'px-4 py-2 font-semibold text-slate-500 hover:text-red-500 border-b-2 border-transparent',
-                    savings: 'px-4 py-2 font-semibold text-slate-500 hover:text-blue-500 border-b-2 border-transparent',
-                    debt: 'px-4 py-2 font-semibold text-slate-500 hover:text-orange-500 border-b-2 border-transparent'
-                };
-                
-                document.getElementById('btn-type-income').className = btnClasses.income;
-                document.getElementById('btn-type-expense').className = btnClasses.expense;
-                document.getElementById('btn-type-savings').className = btnClasses.savings;
-                document.getElementById('btn-type-debt').className = btnClasses.debt;
+                const baseClass = 'px-4 py-2 font-semibold border-b-2';
+                document.getElementById('btn-type-income').className = `${baseClass} text-slate-500 hover:text-emerald-500 border-transparent`;
+                document.getElementById('btn-type-expense').className = `${baseClass} text-slate-500 hover:text-red-500 border-transparent`;
+                document.getElementById('btn-type-savings').className = `${baseClass} text-slate-500 hover:text-blue-500 border-transparent`;
+                document.getElementById('btn-type-debt').className = `${baseClass} text-slate-500 hover:text-orange-500 border-transparent`;
 
-                const activeClasses = {
-                    income: 'text-emerald-600 border-emerald-600',
-                    expense: 'text-red-600 border-red-600',
-                    savings: 'text-blue-600 border-blue-600',
-                    debt: 'text-orange-600 border-orange-600'
-                };
-
-                document.getElementById(`btn-type-${type}`).classList.add(...activeClasses[type].split(' '));
-                document.getElementById(`btn-type-${type}`).classList.remove('text-slate-500', 'border-transparent');
+                const activeColor = { income: 'emerald', expense: 'red', savings: 'blue', debt: 'orange' }[type];
+                const activeBtn = document.getElementById(`btn-type-${type}`);
+                activeBtn.className = `${baseClass} text-${activeColor}-600 border-${activeColor}-600`;
 
                 const catContainer = document.getElementById('category-container');
                 const catSelect = document.getElementById('tx-category');
                 const taxContainer = document.getElementById('tax-deductible-container');
                 const savContainer = document.getElementById('savings-container');
+                const ivaContainer = document.getElementById('iva-container');
                 const currentRegime = document.getElementById('regime-select').value;
+
+                ivaContainer.classList.add('hidden');
+                document.getElementById('tx-iva').checked = false;
 
                 if (type === 'savings') {
                     catContainer.classList.add('hidden');
@@ -820,6 +1114,7 @@
                     
                     if (type === 'expense' && currentRegime !== 'natural') {
                         taxContainer.classList.remove('hidden');
+                        ivaContainer.classList.remove('hidden');
                     } else {
                         taxContainer.classList.add('hidden');
                         document.getElementById('tx-deductible').checked = false;
@@ -835,34 +1130,60 @@
                 document.getElementById('fields-cuenta2').classList.toggle('hidden', savType !== 'cuenta2');
             },
 
+            // -------- GUARDAR/EDITAR --------
             saveTransaction(e) {
                 e.preventDefault();
                 const id = document.getElementById('tx-id').value;
                 const type = document.getElementById('tx-type').value;
-                let originalAmount = parseFloat(document.getElementById('tx-amount').value);
+                const originalAmount = safeFloat(document.getElementById('tx-amount').value);
                 const currency = document.getElementById('tx-currency').value;
                 const date = document.getElementById('tx-date').value;
                 const description = document.getElementById('tx-description').value;
                 
-                let txData = { id: id ? parseInt(id) : Date.now(), type, originalAmount, currency, date, description };
+                if (originalAmount <= 0) {
+                    this.showToast('El monto debe ser mayor a cero', 'error');
+                    return;
+                }
+                
+                let txData = { 
+                    id: id ? parseInt(id) : Date.now(), 
+                    type, 
+                    originalAmount, 
+                    currency, 
+                    date, 
+                    description 
+                };
 
                 if (type === 'savings') {
                     txData.savingsType = document.getElementById('tx-savings-type').value;
-                    if (txData.savingsType === 'dap') txData.dapRate = document.getElementById('tx-dap-rate').value;
-                    if (txData.savingsType === 'apv') txData.apvRegime = document.getElementById('tx-apv-regime').value;
+                    if (txData.savingsType === 'dap') {
+                        txData.dapRate = safeFloat(document.getElementById('tx-dap-rate').value);
+                    }
+                    if (txData.savingsType === 'apv') {
+                        txData.apvRegime = document.getElementById('tx-apv-regime').value;
+                        txData.apvFund = document.getElementById('tx-apv-fund').value;
+                    }
                     if (txData.savingsType === 'cuenta2') {
                         txData.c2Afp = document.getElementById('tx-c2-afp').value;
                         txData.c2Fund = document.getElementById('tx-c2-fund').value;
                     }
                 } else {
                     txData.category = document.getElementById('tx-category').value;
-                    if (type === 'expense') txData.isDeductible = document.getElementById('tx-deductible').checked;
+                    if (type === 'expense') {
+                        txData.isDeductible = document.getElementById('tx-deductible').checked;
+                        txData.hasIva = document.getElementById('tx-iva').checked;
+                        if (txData.hasIva) {
+                            const total = this.getBaseAmountInCLP(txData);
+                            txData.ivaNet = total / (1 + IVA_RATE);
+                            txData.ivaCredit = total - txData.ivaNet;
+                        }
+                    }
                     
-                    // Manejo específico de Honorarios
+                    // FIX bug #6: Honorarios — siempre calcular meta, sin reescribir originalAmount
                     if (type === 'income' && txData.category === 'Honorarios') {
                         const inputType = document.getElementById('hon-input-type').value;
-                        const rate = this.getHonorariosRate(date);
-                        let liquido = 0, bruto = 0, retencion = 0;
+                        const rate = getHonorariosRate(date);
+                        let bruto, liquido, retencion;
                         
                         if (inputType === 'bruto') {
                             bruto = originalAmount;
@@ -874,49 +1195,53 @@
                             retencion = bruto - liquido;
                         }
                         
-                        txData.originalAmount = liquido; // Guardamos el líquido para que el Flujo de Caja sea real
-                        txData.meta = { bruto: bruto, retencion: retencion, tasa: rate };
+                        // Guardamos lo que el usuario ingresó en originalAmount + el modo
+                        txData.originalAmount = originalAmount;
+                        txData.honMode = inputType; // 'bruto' o 'liquido'
+                        txData.meta = { bruto, liquido, retencion, tasa: rate };
                     }
                 }
 
-                // Kasasaad ti panag-load iti buton
                 const btn = document.getElementById('btn-save-tx');
                 const originalBtnText = btn.innerText;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
                 btn.disabled = true;
 
                 try {
-                    // No na-configure ti URL, ipatulodtayo iti Google Sheets iti background
-                    if(SCRIPT_URL !== "PEGAR_AQUI_TU_URL_DE_APPS_SCRIPT") {
-                        // Ipatulodtayo a kas text/plain tapno maliklikan dagiti CORS blocks manipud iti browser
+                    if (id) {
+                        const index = appState.transactions.findIndex(t => t.id === txData.id);
+                        if (index !== -1) appState.transactions[index] = txData;
+                        this.showToast('Registro actualizado');
+                    } else {
+                        appState.transactions.push(txData);
+                        this.showToast('Registro guardado');
+                    }
+                    
+                    // Persistir en caché LOCAL inmediatamente (mejora #10)
+                    this.saveToCache();
+
+                    // Sincronizar con Sheets en background
+                    if (!SCRIPT_URL.includes("PEGAR_AQUI")) {
                         fetch(SCRIPT_URL, {
                             method: 'POST',
                             redirect: 'follow',
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             body: JSON.stringify({ action: id ? 'update' : 'add', data: txData })
-                        }).catch(e => console.error("Error al guardar en Sheets:", e));
-                    }
-
-                    if (id) {
-                        const index = appState.transactions.findIndex(t => t.id === txData.id);
-                        if (index !== -1) appState.transactions[index] = txData;
-                        this.showToast('Registro actualizado exitosamente');
-                    } else {
-                        appState.transactions.push(txData);
-                        this.showToast('Registro guardado exitosamente');
+                        }).catch(e => console.error("Error Sheets:", e));
                     }
 
                     this.resetForm();
-                    this.renderDashboard();
-                    this.updateCoach();
+                    this.renderAll();
                 } catch (error) {
                     this.showToast('Error al guardar', 'error');
+                    console.error(error);
                 } finally {
                     btn.innerHTML = originalBtnText;
                     btn.disabled = false;
                 }
             },
 
+            // FIX bug #6: edición correcta de honorarios
             editTransaction(id) {
                 const tx = appState.transactions.find(t => t.id === id);
                 if (!tx) return;
@@ -928,45 +1253,61 @@
                 document.getElementById('tx-amount').value = tx.originalAmount;
                 document.getElementById('tx-currency').value = tx.currency;
                 document.getElementById('tx-date').value = tx.date;
-                document.getElementById('tx-description').value = tx.description;
+                document.getElementById('tx-description').value = tx.description || '';
                 
-                if(tx.type === 'savings') {
+                if (tx.type === 'savings') {
                     document.getElementById('tx-savings-type').value = tx.savingsType;
                     this.toggleSavingsSubFields();
-                    if(tx.savingsType === 'dap') document.getElementById('tx-dap-rate').value = tx.dapRate;
-                    if(tx.savingsType === 'apv') document.getElementById('tx-apv-regime').value = tx.apvRegime;
-                    if(tx.savingsType === 'cuenta2') {
-                        document.getElementById('tx-c2-afp').value = tx.c2Afp;
-                        document.getElementById('tx-c2-fund').value = tx.c2Fund;
+                    if (tx.savingsType === 'dap') document.getElementById('tx-dap-rate').value = tx.dapRate || '';
+                    if (tx.savingsType === 'apv') {
+                        document.getElementById('tx-apv-regime').value = tx.apvRegime || 'A';
+                        if (tx.apvFund) document.getElementById('tx-apv-fund').value = tx.apvFund;
+                    }
+                    if (tx.savingsType === 'cuenta2') {
+                        document.getElementById('tx-c2-afp').value = tx.c2Afp || 'Habitat';
+                        document.getElementById('tx-c2-fund').value = tx.c2Fund || 'C';
                     }
                 } else {
                     document.getElementById('tx-category').value = tx.category;
-                    if(tx.type === 'expense') document.getElementById('tx-deductible').checked = tx.isDeductible || false;
+                    this.handleCategoryChange();
+                    
+                    if (tx.type === 'expense') {
+                        document.getElementById('tx-deductible').checked = tx.isDeductible || false;
+                        if (tx.hasIva) {
+                            document.getElementById('tx-iva').checked = true;
+                            this.handleIvaToggle();
+                        }
+                    }
+                    
+                    // FIX bug #6: restaurar honMode original
+                    if (tx.type === 'income' && tx.category === 'Honorarios' && tx.honMode) {
+                        document.getElementById('hon-input-type').value = tx.honMode;
+                        this.calculateHonorarios();
+                    }
                 }
 
                 document.getElementById('btn-save-tx').innerText = 'Actualizar Registro';
             },
 
             deleteTransaction(id) {
-                if(confirm('¿Estás seguro de eliminar este registro?')) {
-                    try {
-                        // Ikkaten manipud iti Google Sheets
-                        if(SCRIPT_URL !== "PEGAR_AQUI_TU_URL_DE_APPS_SCRIPT") {
-                            fetch(SCRIPT_URL, {
-                                method: 'POST',
-                                redirect: 'follow',
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify({ action: 'delete', id: id })
-                            }).catch(e => console.error("Error al eliminar en Sheets:", e));
-                        }
-                        
-                        appState.transactions = appState.transactions.filter(t => t.id !== id);
-                        this.renderHistory();
-                        this.renderDashboard();
-                        this.showToast('Registro eliminado');
-                    } catch (error) {
-                        this.showToast('Error al eliminar', 'error');
+                if (!confirm('¿Eliminar este registro?')) return;
+                try {
+                    appState.transactions = appState.transactions.filter(t => t.id !== id);
+                    this.saveToCache();
+
+                    if (!SCRIPT_URL.includes("PEGAR_AQUI")) {
+                        fetch(SCRIPT_URL, {
+                            method: 'POST',
+                            redirect: 'follow',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ action: 'delete', id })
+                        }).catch(e => console.error("Error:", e));
                     }
+                    
+                    this.renderAll();
+                    this.showToast('Registro eliminado');
+                } catch (error) {
+                    this.showToast('Error al eliminar', 'error');
                 }
             },
 
@@ -975,16 +1316,16 @@
                 document.getElementById('tx-id').value = '';
                 document.getElementById('btn-save-tx').innerText = 'Guardar Registro';
                 document.getElementById('ai-magic-input').value = '';
+                document.getElementById('date-warning').classList.add('hidden');
                 this.initDate();
                 this.setTxType('income');
             },
 
-            // --- LLM Features (Gemini) ---
-
+            // -------- IA: PARSE LIBRE (vía proxy seguro) --------
             async parseWithAI() {
                 const inputText = document.getElementById('ai-magic-input').value.trim();
                 if (!inputText) {
-                    this.showToast('Por favor, escribe un movimiento primero', 'error');
+                    this.showToast('Escribe un movimiento primero', 'error');
                     return;
                 }
 
@@ -993,36 +1334,13 @@
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
                 btn.disabled = true;
 
-                const todayStr = new Date().toISOString().split('T')[0];
-                const prompt = `Analiza el siguiente texto escrito por un usuario chileno y extrae los datos de la transacción financiera.
-Texto: "${inputText}"
-Hoy es: ${todayStr}
-
-Debes deducir el tipo (income, expense, debt, savings), el monto (solo el número), la moneda (CLP por defecto, pero busca si dice UF o dólares), la fecha, la categoría (elige la más cercana de la lista dada) y una descripción breve.
-Opciones de categoría si es INGRESO: ${appState.categories.income.join(', ')}
-Opciones de categoría si es GASTO: ${appState.categories.expense.join(', ')}
-Opciones de categoría si es DEUDA: ${appState.categories.debt.join(', ')}`;
-
-                const schema = {
-                    type: "OBJECT",
-                    properties: {
-                        type: { type: "STRING", description: "Uno de: income, expense, savings, debt. Si pagó o compró algo, es expense. Si recibió algo, es income." },
-                        amount: { type: "NUMBER", description: "El monto numérico. Si dice 'lucas', multiplica por 1000. Ej: 50 lucas = 50000." },
-                        currency: { type: "STRING", description: "CLP, UF, o USD" },
-                        date: { type: "STRING", description: "Formato YYYY-MM-DD. Deduce la fecha exacta basada en hoy." },
-                        category: { type: "STRING", description: "Categoría más apropiada." },
-                        description: { type: "STRING", description: "Descripción corta (max 50 chars)." }
-                    },
-                    required: ["type", "amount", "currency", "date", "description", "category"]
-                };
-
                 try {
-                    const result = await fetchGemini(prompt, { 
-                        systemInstruction: "Eres un asistente financiero que extrae datos exactos de texto en formato JSON. Entiendes chilenismos como 'lucas' o 'gambas'.",
-                        jsonSchema: schema 
+                    const result = await callProxy('gemini_parse', {
+                        text: inputText,
+                        categories: appState.categories,
+                        today: new Date().toISOString().split('T')[0]
                     });
 
-                    // Punnuen ti Formulario
                     this.setTxType(result.type);
                     document.getElementById('tx-amount').value = result.amount;
                     document.getElementById('tx-currency').value = result.currency;
@@ -1030,16 +1348,17 @@ Opciones de categoría si es DEUDA: ${appState.categories.debt.join(', ')}`;
                     document.getElementById('tx-description').value = result.description;
                     
                     if (result.type !== 'savings') {
-                        // Siguraduen nga adda ti kategoria iti dropdown, no saan ket default
                         const select = document.getElementById('tx-category');
                         if (Array.from(select.options).some(o => o.value === result.category)) {
                             select.value = result.category;
                         }
+                        this.handleCategoryChange();
                     }
 
-                    this.showToast('¡Autocompletado con IA con éxito!');
+                    this.showToast('Autocompletado con IA');
                 } catch (error) {
-                    console.error("Error with AI parse:", error);
+                    console.error(error);
+                    this.showToast('Error de IA: ' + (error.message || 'desconocido'), 'error');
                 } finally {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
@@ -1051,16 +1370,14 @@ Opciones de categoría si es DEUDA: ${appState.categories.debt.join(', ')}`;
                 const reportContainer = document.getElementById('ai-report-container');
                 const contentDiv = document.getElementById('ai-report-content');
                 
-                // Ipakita ti UI loading state
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Analizando finanzas...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Analizando...';
                 btn.disabled = true;
                 reportContainer.classList.remove('hidden');
                 contentDiv.innerHTML = '<div class="h-24 rounded-lg ai-loading w-full"></div>';
 
-                // Urnongen ti context ti datos
-                const regime = document.getElementById('regime-select').options[document.getElementById('regime-select').selectedIndex].text;
+                const regimeSel = document.getElementById('regime-select');
+                const regime = regimeSel.options[regimeSel.selectedIndex].text;
                 
-                // Karkuluen dagiti total iti napalabas a 30 nga aldaw
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
                 
@@ -1082,115 +1399,163 @@ Opciones de categoría si es DEUDA: ${appState.categories.debt.join(', ')}`;
 
                 const topCategory = Object.keys(topExpenseCategories).sort((a, b) => topExpenseCategories[b] - topExpenseCategories[a])[0] || "Ninguna";
 
-                const prompt = `Actúa como un Asesor Financiero y Tributario Experto en Chile.
-Revisa los siguientes datos financieros de los últimos 30 días del usuario:
-- Régimen Tributario: ${regime}
-- Ingresos: ${this.formatCurrency(income30)}
-- Gastos: ${this.formatCurrency(expense30)}
-- Mayor categoría de gasto: ${topCategory}
-- Deuda Activa Total: ${this.formatCurrency(debtTotal)}
-- Inflación (IPC anualizada): ${appState.rates.ipc}%
-
-Genera un reporte ejecutivo y empático directamente en HTML (solo el contenido interno, usa etiquetas <h4>, <p>, <ul>, <li>, <strong>). 
-El reporte debe contener:
-1. Un saludo motivador.
-2. Un diagnóstico breve sobre su liquidez de los últimos 30 días.
-3. 2 recomendaciones ultra específicas (una de ahorro/microeconomía para combatir la inflación, y otra táctica/tributaria según su régimen).`;
-
                 try {
-                    const responseHTML = await fetchGemini(prompt, {
-                        systemInstruction: "Eres un asesor financiero experto de Chile. Respondes en código HTML limpio (sin etiquetas de markdown ```html) y con tono profesional, pero cercano."
+                    // El proxy en Apps Script construye el prompt con contexto tributario actualizado
+                    const result = await callProxy('gemini_report', {
+                        regime,
+                        income30,
+                        expense30,
+                        topCategory,
+                        debtTotal,
+                        ipc: appState.rates.ipc
                     });
-                    
-                    // Dalusn dagiti mabalin a markdown blocks manipud iti response no adda
-                    const cleanHTML = responseHTML.replace(/```html/g, '').replace(/```/g, '');
-                    contentDiv.innerHTML = cleanHTML;
-
+                    contentDiv.innerHTML = result.html || '<p>Sin contenido.</p>';
                 } catch (error) {
-                    contentDiv.innerHTML = '<p class="text-red-500">Hubo un problema al generar tu análisis con IA. Por favor, intenta de nuevo.</p>';
+                    console.error(error);
+                    contentDiv.innerHTML = `<p class="text-red-500">No se pudo generar el análisis: ${error.message || 'error desconocido'}.</p>`;
                 } finally {
                     btn.innerHTML = '<i class="fa-solid fa-brain mr-2"></i> Generar Análisis Profundo con IA ✨';
                     btn.disabled = false;
                 }
             },
 
-            // --- Lohika ti History & Rendering ---
+            // -------- UI HELPERS --------
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                const icon = document.getElementById('toast-icon');
+                document.getElementById('toast-message').innerText = message;
+                
+                const bgs = { success: 'bg-emerald-600', error: 'bg-red-600', warn: 'bg-amber-600' };
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warn: 'fa-triangle-exclamation' };
+                
+                toast.className = `fixed bottom-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50 flex items-center ${bgs[type] || bgs.success}`;
+                icon.className = `fa-solid ${icons[type] || icons.success} mr-3`;
+                
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+            },
 
+            // -------- SIDEBAR MÓVIL --------
+            toggleSidebar(forceState) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                const willOpen = forceState !== undefined ? forceState : !sidebar.classList.contains('open');
+                
+                if (willOpen) {
+                    sidebar.classList.add('open');
+                    overlay.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('open');
+                    document.body.style.overflow = '';
+                }
+            },
+
+            switchTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                
+                const labels = {
+                    dashboard: 'Dashboard',
+                    transactions: 'Nuevo Registro',
+                    history: 'Historial',
+                    indicators: 'Indicadores',
+                    coach: 'Coach Financiero'
+                };
+                const mobileLabel = document.getElementById('mobile-tab-label');
+                if (mobileLabel) mobileLabel.innerText = labels[tabId] || '';
+                
+                document.querySelectorAll('.nav-link').forEach(el => {
+                    el.classList.remove('text-emerald-400', 'bg-slate-800', 'border-emerald-400');
+                    el.classList.add('border-transparent');
+                    if (el.dataset.tab === tabId) {
+                        el.classList.add('text-emerald-400', 'bg-slate-800', 'border-emerald-400');
+                        el.classList.remove('border-transparent');
+                    }
+                });
+
+                // Cerrar el sidebar en móvil al cambiar de pestaña
+                if (window.innerWidth < 1024) {
+                    this.toggleSidebar(false);
+                }
+
+                // Scroll al inicio (en móvil esto importa más por el header sticky)
+                window.scrollTo({ top: 0, behavior: 'instant' });
+
+                // FIX mejora #17: usar requestAnimationFrame para charts
+                if (tabId === 'dashboard') requestAnimationFrame(() => this.renderDashboard());
+                if (tabId === 'history') this.renderHistory();
+                if (tabId === 'coach') this.updateCoach();
+                if (tabId === 'indicators') this.renderIndicators();
+            },
+
+            // -------- HISTORIAL --------
             renderHistory() {
                 const tbody = document.getElementById('history-table-body');
+                if (!tbody) return;
                 const sorted = [...appState.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                 if (sorted.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">No hay registros guardados.</td></tr>`;
+                    tbody.innerHTML = `<tr class="block md:table-row"><td colspan="7" class="p-6 text-center text-slate-500 block md:table-cell">Sin registros.</td></tr>`;
                     return;
                 }
 
                 tbody.innerHTML = sorted.map(tx => {
-                    let typeBadge = '';
-                    let amountClass = '';
-                    let icon = '';
-                    let categoryOrDetail = '';
-                    
-                    if (tx.type === 'income') {
-                        typeBadge = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-semibold">Ingreso</span>';
-                        amountClass = 'text-emerald-600 font-semibold';
-                        icon = '<i class="fa-solid fa-arrow-up text-emerald-500 mr-2"></i>';
-                        categoryOrDetail = tx.category;
-                    } else if (tx.type === 'expense') {
-                        typeBadge = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">Gasto</span>';
-                        amountClass = 'text-red-600 font-semibold';
-                        icon = '<i class="fa-solid fa-arrow-down text-red-500 mr-2"></i>';
-                        categoryOrDetail = tx.category;
-                    } else if (tx.type === 'debt') {
-                        typeBadge = '<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-semibold">Deuda</span>';
-                        amountClass = 'text-orange-600 font-semibold';
-                        icon = '<i class="fa-solid fa-credit-card text-orange-500 mr-2"></i>';
-                        categoryOrDetail = tx.category;
-                    } else if (tx.type === 'savings') {
-                        typeBadge = '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">Ahorro</span>';
-                        amountClass = 'text-blue-600 font-semibold';
-                        icon = '<i class="fa-solid fa-piggy-bank text-blue-500 mr-2"></i>';
-                        if(tx.savingsType === 'dap') categoryOrDetail = `DAP (${tx.dapRate}%)`;
-                        if(tx.savingsType === 'apv') categoryOrDetail = `APV (Régimen ${tx.apvRegime})`;
-                        if(tx.savingsType === 'cuenta2') categoryOrDetail = `Cuenta 2 (${tx.c2Afp} - F. ${tx.c2Fund})`;
+                    const cfg = {
+                        income: { badge: 'bg-emerald-100 text-emerald-700', label: 'Ingreso', cls: 'text-emerald-600', icon: 'fa-arrow-up text-emerald-500' },
+                        expense: { badge: 'bg-red-100 text-red-700', label: 'Gasto', cls: 'text-red-600', icon: 'fa-arrow-down text-red-500' },
+                        debt: { badge: 'bg-orange-100 text-orange-700', label: 'Deuda', cls: 'text-orange-600', icon: 'fa-credit-card text-orange-500' },
+                        savings: { badge: 'bg-blue-100 text-blue-700', label: 'Ahorro', cls: 'text-blue-600', icon: 'fa-piggy-bank text-blue-500' }
+                    }[tx.type] || {};
+
+                    let categoryOrDetail = tx.category || '-';
+                    if (tx.type === 'savings') {
+                        if (tx.savingsType === 'dap') categoryOrDetail = `DAP (${safeFloat(tx.dapRate).toFixed(1)}%)`;
+                        if (tx.savingsType === 'apv') categoryOrDetail = `APV ${tx.apvRegime || ''} - F.${tx.apvFund || 'C'}`;
+                        if (tx.savingsType === 'cuenta2') categoryOrDetail = `Cuenta 2 (${tx.c2Afp} - F.${tx.c2Fund})`;
                     }
 
                     const dateStr = new Date(tx.date).toLocaleDateString('es-CL');
                     const estimatedValueCLP = this.getEstimatedCurrentValue(tx);
                     
-                    let declaredAmount = this.formatCurrency(tx.originalAmount);
-                    if(tx.currency !== 'CLP') {
-                        declaredAmount = `<span class="font-medium text-slate-700">${this.formatOtherCurrency(tx.originalAmount, tx.currency)}</span>`;
+                    let declaredAmount = formatCurrency(tx.originalAmount);
+                    if (tx.currency !== 'CLP') {
+                        declaredAmount = `<span class="font-medium text-slate-700">${formatOtherCurrency(tx.originalAmount, tx.currency)}</span>`;
                     }
 
-                    let estimatedHTML = this.formatCurrency(estimatedValueCLP);
+                    let estimatedHTML = formatCurrency(estimatedValueCLP);
                     const baseCLP = this.getBaseAmountInCLP(tx);
-                    if(tx.type === 'savings' && estimatedValueCLP > baseCLP) {
-                        estimatedHTML += `<br><span class="text-xs text-emerald-500">+${this.formatCurrency(estimatedValueCLP - baseCLP)}</span>`;
+                    if (tx.type === 'savings' && estimatedValueCLP > baseCLP) {
+                        estimatedHTML += `<br><span class="text-xs text-emerald-500">+${formatCurrency(estimatedValueCLP - baseCLP)}</span>`;
+                    }
+                    
+                    // Mostrar bruto en honorarios
+                    if (tx.type === 'income' && tx.category === 'Honorarios' && tx.meta) {
+                        estimatedHTML = `${formatCurrency(tx.meta.liquido)}<br><span class="text-xs text-slate-500">Bruto: ${formatCurrency(tx.meta.bruto)}</span>`;
                     }
 
                     return `
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-4 text-sm text-slate-700">${dateStr}</td>
-                            <td class="p-4 text-sm">${typeBadge}</td>
-                            <td class="p-4 text-sm text-slate-700">${icon}${categoryOrDetail}</td>
-                            <td class="p-4 text-sm text-slate-500 truncate max-w-xs">${tx.description || '-'}</td>
-                            <td class="p-4 text-sm text-right bg-slate-50">${declaredAmount}</td>
-                            <td class="p-4 text-sm ${amountClass} text-right">${estimatedHTML}</td>
-                            <td class="p-4 text-sm text-center">
-                                <button onclick="app.editTransaction(${tx.id})" class="text-blue-500 hover:text-blue-700 mr-3" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="app.deleteTransaction(${tx.id})" class="text-slate-400 hover:text-red-600" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                            <td class="p-4 text-sm text-slate-700" data-label="Fecha">${dateStr}</td>
+                            <td class="p-4 text-sm" data-label="Tipo"><span class="${cfg.badge} px-2 py-1 rounded text-xs font-semibold">${cfg.label}</span></td>
+                            <td class="p-4 text-sm text-slate-700" data-label="Categoría"><i class="fa-solid ${cfg.icon} mr-2"></i>${categoryOrDetail}</td>
+                            <td class="p-4 text-sm text-slate-500 md:truncate md:max-w-xs" data-label="Descripción">${tx.description || '-'}</td>
+                            <td class="p-4 text-sm text-right md:bg-slate-50" data-label="Monto">${declaredAmount}</td>
+                            <td class="p-4 text-sm ${cfg.cls} font-semibold text-right" data-label="Valor Actual">${estimatedHTML}</td>
+                            <td class="p-4 text-sm text-center actions-cell">
+                                <button onclick="app.editTransaction(${tx.id})" class="text-blue-500 hover:text-blue-700 mr-3 icon-btn-mobile" aria-label="Editar"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="app.deleteTransaction(${tx.id})" class="text-slate-400 hover:text-red-600 icon-btn-mobile" aria-label="Eliminar"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
                 }).join('');
             },
 
+            // -------- DASHBOARD --------
             get12MonthsData() {
                 const today = new Date();
-                const months = [];
-                const incomeData = [];
-                const expenseData = [];
+                const months = [], incomeData = [], expenseData = [];
                 const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
                 for (let i = 11; i >= 0; i--) {
@@ -1198,21 +1563,17 @@ El reporte debe contener:
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
                     months.push(`${monthNames[d.getMonth()]} ${d.getFullYear().toString().substr(-2)}`);
                     
-                    let mIncome = 0;
-                    let mExpense = 0;
-
+                    let mIncome = 0, mExpense = 0;
                     appState.transactions.forEach(tx => {
-                        if (tx.date.startsWith(monthKey)) {
+                        if (tx.date && tx.date.startsWith(monthKey)) {
                             const clpAmount = this.getBaseAmountInCLP(tx);
                             if (tx.type === 'income') mIncome += clpAmount;
                             if (tx.type === 'expense') mExpense += clpAmount;
                         }
                     });
-
                     incomeData.push(mIncome);
                     expenseData.push(mExpense);
                 }
-
                 return { labels: months, income: incomeData, expense: expenseData };
             },
 
@@ -1225,6 +1586,7 @@ El reporte debe contener:
 
                 appState.transactions.forEach(tx => {
                     const txDate = new Date(tx.date);
+                    if (isNaN(txDate.getTime())) return;
                     const baseCLP = this.getBaseAmountInCLP(tx);
                     
                     if (tx.type === 'debt') {
@@ -1242,72 +1604,67 @@ El reporte debe contener:
 
                 const balance = totalIncome - totalExpense;
 
-                document.getElementById('kpi-income').innerText = this.formatCurrency(totalIncome);
-                document.getElementById('kpi-expense').innerText = this.formatCurrency(totalExpense);
-                document.getElementById('kpi-balance').innerText = this.formatCurrency(balance);
-                document.getElementById('kpi-savings').innerText = this.formatCurrency(currentSavingsTotal);
-                document.getElementById('kpi-debt').innerText = this.formatCurrency(totalDebt);
+                document.getElementById('kpi-income').innerText = formatCurrency(totalIncome);
+                document.getElementById('kpi-expense').innerText = formatCurrency(totalExpense);
+                document.getElementById('kpi-balance').innerText = formatCurrency(balance);
+                document.getElementById('kpi-savings').innerText = formatCurrency(currentSavingsTotal);
+                document.getElementById('kpi-debt').innerText = formatCurrency(totalDebt);
 
                 this.updateCharts(categoryTotals, totalIncome, totalExpense);
 
-                // --- Karkuluen dagiti Dinamiko a Projections ---
+                // Proyecciones: solo meses con actividad efectiva (mejora #9)
                 const todayDate = new Date();
                 const sixMonthsAgoDate = new Date(todayDate.getFullYear(), todayDate.getMonth() - 6, 1);
                 
-                let activeMonths = new Set();
-                let histIncome = 0;
-                let histExpense = 0;
-
+                const monthlyData = {}; // { 'YYYY-MM': { inc, exp } }
                 appState.transactions.forEach(tx => {
                     const txDate = new Date(tx.date);
+                    if (isNaN(txDate.getTime())) return;
                     if (txDate >= sixMonthsAgoDate && txDate <= todayDate) {
-                        const monthKey = `${txDate.getFullYear()}-${txDate.getMonth()}`;
-                        activeMonths.add(monthKey);
-                        
+                        const key = `${txDate.getFullYear()}-${txDate.getMonth()}`;
+                        if (!monthlyData[key]) monthlyData[key] = { inc: 0, exp: 0 };
                         const clpAmount = this.getBaseAmountInCLP(tx);
-                        if (tx.type === 'income') histIncome += clpAmount;
-                        if (tx.type === 'expense') histExpense += clpAmount;
+                        if (tx.type === 'income') monthlyData[key].inc += clpAmount;
+                        if (tx.type === 'expense') monthlyData[key].exp += clpAmount;
                     }
                 });
 
-                const monthsCount = Math.max(1, activeMonths.size);
+                // Solo contar meses donde hubo ingresos O gastos > 0
+                const activeMonths = Object.values(monthlyData).filter(m => m.inc > 0 || m.exp > 0);
+                const monthsCount = Math.max(1, activeMonths.length);
+                const histIncome = activeMonths.reduce((s, m) => s + m.inc, 0);
+                const histExpense = activeMonths.reduce((s, m) => s + m.exp, 0);
+                
                 const avgIncome = histIncome / monthsCount;
                 const avgExpense = histExpense / monthsCount;
                 const avgBalance = avgIncome - avgExpense;
 
-                const horizons = [1, 3, 6];
-                horizons.forEach(m => {
-                    document.getElementById(`proj-inc-${m}`).innerText = this.formatCurrency(avgIncome * m);
-                    document.getElementById(`proj-exp-${m}`).innerText = this.formatCurrency(avgExpense * m);
+                [1, 3, 6].forEach(m => {
+                    document.getElementById(`proj-inc-${m}`).innerText = formatCurrency(avgIncome * m);
+                    document.getElementById(`proj-exp-${m}`).innerText = formatCurrency(avgExpense * m);
                     
                     const elBalance = document.getElementById(`proj-bal-${m}`);
                     const valBalance = avgBalance * m;
-                    elBalance.innerText = this.formatCurrency(valBalance);
-                    
-                    if(valBalance >= 0) {
-                        elBalance.className = 'p-3 text-sm font-bold text-right text-blue-600';
-                    } else {
-                        elBalance.className = 'p-3 text-sm font-bold text-right text-orange-600';
-                    }
+                    elBalance.innerText = formatCurrency(valBalance);
+                    elBalance.className = `p-3 text-sm font-bold text-right ${valBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`;
                 });
 
-                // Estratehiko a Rekomendasion
                 let recText = "";
                 const regime = document.getElementById('regime-select').value;
 
-                if (activeMonths.size === 0) {
+                if (activeMonths.length === 0) {
                     recText = "Aún no hay suficientes movimientos en los últimos 6 meses para generar una recomendación predictiva.";
                 } else if (avgBalance > 0) {
-                    recText = `Tu tendencia es positiva. De mantenerse, en 6 meses acumularás un excedente de <strong>${this.formatCurrency(avgBalance * 6)}</strong>. `;
-                    if(regime === '14d8') {
-                        recText += `Al estar en el régimen <strong>14 D8 (Transparente)</strong>, recuerda que la empresa no paga Primera Categoría; este flujo positivo se te atribuirá directamente y tributará en tu Global Complementario. <strong>Recomendación:</strong> Proyecta destinar un porcentaje de este flujo a un APV Régimen B.`;
+                    recText = `Tu tendencia es positiva (${activeMonths.length} mes${activeMonths.length > 1 ? 'es' : ''} con actividad). En 6 meses acumularás un excedente de <strong>${formatCurrency(avgBalance * 6)}</strong>. `;
+                    if (regime === '14d8') {
+                        recText += `En <strong>14 D8 (Transparente)</strong>, tu empresa no paga IDPC; este excedente se atribuye a tu Global Complementario. <strong>Recomendación:</strong> destina parte a APV Régimen B.`;
                     } else if (regime === '14d3') {
-                        recText += `En el régimen <strong>14 D3</strong> la empresa paga su propio IDPC. <strong>Recomendación:</strong> Evalúa reinvertir este flujo en capital de trabajo o, si decides retirarlo, recuerda tener en cuenta la DJ 1948.`;
+                        recText += `En <strong>14 D3</strong>, tasa IDPC vigente <strong>12,5%</strong> (Ley 21.755, AC 2025-2027). <strong>Recomendación:</strong> evalúa el incentivo al ahorro Art. 14 letra E (rebaja 50% RLI reinvertida, tope 5.000 UF).`;
                     } else {
-                        recText += `<strong>Recomendación:</strong> Considera automatizar el traspaso de al menos el 50% de este excedente mensual hacia una Cuenta 2 o un Depósito a Plazo para protegerte de la inflación (${appState.rates.ipc}% anual).`;
+                        recText += `<strong>Recomendación:</strong> automatiza el traspaso del 50% de este excedente a Cuenta 2 o DAP para protegerte de la inflación (${appState.rates.ipc}% anual).`;
                     }
                 } else {
-                    recText = `⚠️ <strong>Atención de Liquidez.</strong> Tu promedio de gastos supera tus ingresos. Revisa tus gastos categorizados como "Ocio" o "Otros Gastos" y elimínalos temporalmente. Cuidado con el costo financiero de tu deuda en UF.`;
+                    recText = `⚠️ <strong>Atención de Liquidez.</strong> Promedio de gastos supera ingresos en ${formatCurrency(Math.abs(avgBalance))} mensuales. Revisa categorías "Ocio" y "Otros Gastos".`;
                 }
 
                 document.getElementById('proj-recommendation').innerHTML = recText;
@@ -1317,49 +1674,58 @@ El reporte debe contener:
                 const chartConfig = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
 
                 const evoData = this.get12MonthsData();
-                const ctxEvo = document.getElementById('evolutionChart').getContext('2d');
-                if (appState.charts.evolution) appState.charts.evolution.destroy();
-                appState.charts.evolution = new Chart(ctxEvo, {
-                    type: 'line',
-                    data: {
-                        labels: evoData.labels,
-                        datasets: [
-                            { label: 'Ingresos', data: evoData.income, borderColor: '#10b981', backgroundColor: '#10b98122', fill: true, tension: 0.4 },
-                            { label: 'Gastos', data: evoData.expense, borderColor: '#ef4444', backgroundColor: '#ef444422', fill: true, tension: 0.4 }
-                        ]
-                    },
-                    options: chartConfig
-                });
+                const ctxEvo = document.getElementById('evolutionChart')?.getContext('2d');
+                if (ctxEvo) {
+                    if (appState.charts.evolution) appState.charts.evolution.destroy();
+                    appState.charts.evolution = new Chart(ctxEvo, {
+                        type: 'line',
+                        data: {
+                            labels: evoData.labels,
+                            datasets: [
+                                { label: 'Ingresos', data: evoData.income, borderColor: '#10b981', backgroundColor: '#10b98122', fill: true, tension: 0.4 },
+                                { label: 'Gastos', data: evoData.expense, borderColor: '#ef4444', backgroundColor: '#ef444422', fill: true, tension: 0.4 }
+                            ]
+                        },
+                        options: chartConfig
+                    });
+                }
 
                 const catLabels = Object.keys(categoryTotals);
                 const catData = Object.values(categoryTotals);
                 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-                const ctxCat = document.getElementById('categoryChart').getContext('2d');
-                if (appState.charts.category) appState.charts.category.destroy();
-                appState.charts.category = new Chart(ctxCat, {
-                    type: 'doughnut',
-                    data: {
-                        labels: catLabels.length ? catLabels : ['Sin datos'],
-                        datasets: [{ data: catData.length ? catData : [1], backgroundColor: catLabels.length ? colors : ['#e2e8f0'] }]
-                    },
-                    options: chartConfig
-                });
+                const ctxCat = document.getElementById('categoryChart')?.getContext('2d');
+                if (ctxCat) {
+                    if (appState.charts.category) appState.charts.category.destroy();
+                    appState.charts.category = new Chart(ctxCat, {
+                        type: 'doughnut',
+                        data: {
+                            labels: catLabels.length ? catLabels : ['Sin datos'],
+                            datasets: [{ data: catData.length ? catData : [1], backgroundColor: catLabels.length ? colors : ['#e2e8f0'] }]
+                        },
+                        options: chartConfig
+                    });
+                }
 
-                const ctxVs = document.getElementById('vsChart').getContext('2d');
-                if (appState.charts.vs) appState.charts.vs.destroy();
-                appState.charts.vs = new Chart(ctxVs, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Balance General'],
-                        datasets: [
-                            { label: 'Ingresos', data: [totalIncome], backgroundColor: '#10b981' },
-                            { label: 'Gastos', data: [totalExpense], backgroundColor: '#ef4444' }
-                        ]
-                    },
-                    options: { ...chartConfig, scales: { y: { beginAtZero: true } } }
-                });
+                const ctxVs = document.getElementById('vsChart')?.getContext('2d');
+                if (ctxVs) {
+                    if (appState.charts.vs) appState.charts.vs.destroy();
+                    appState.charts.vs = new Chart(ctxVs, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Balance General'],
+                            datasets: [
+                                { label: 'Ingresos', data: [totalIncome], backgroundColor: '#10b981' },
+                                { label: 'Gastos', data: [totalExpense], backgroundColor: '#ef4444' }
+                            ]
+                        },
+                        options: { ...chartConfig, scales: { y: { beginAtZero: true } } }
+                    });
+                }
             },
 
+            // ============================================================
+            // COACH TRIBUTARIO (con FIX crítico #3 — tasa Pyme transitoria)
+            // ============================================================
             updateCoach() {
                 const regime = document.getElementById('regime-select').value;
                 const today = new Date();
@@ -1369,30 +1735,31 @@ El reporte debe contener:
                 let monthlyIncome = 0, monthlyExpense = 0, acceptedExpenses = 0;
                 let savingsStats = { dap: [], apv: [], c2: [] };
 
-                // Variables para Simulador Anual (Operación Renta)
                 let ytdHonorariosBrutos = 0, ytdRetenciones = 0;
                 let ytdSueldos = 0, ytdVentas = 0;
                 let ytdGastosAceptados = 0;
                 let ytdApvB = 0;
+                let ytdIvaCredito = 0;
 
                 appState.transactions.forEach(tx => {
                     const clpAmount = this.getBaseAmountInCLP(tx);
-                    const txYear = new Date(tx.date).getFullYear();
+                    const txDate = new Date(tx.date);
+                    if (isNaN(txDate.getTime())) return;
+                    const txYear = txDate.getFullYear();
 
-                    if (tx.date.startsWith(currentMonthPrefix)) {
+                    if (tx.date && tx.date.startsWith(currentMonthPrefix)) {
                         if (tx.type === 'income') monthlyIncome += clpAmount;
                         if (tx.type === 'expense') {
                             monthlyExpense += clpAmount;
-                            if(tx.isDeductible) acceptedExpenses += clpAmount;
+                            if (tx.isDeductible) acceptedExpenses += clpAmount;
                         }
                     }
 
-                    // Acumular rentas del año en curso
                     if (txYear === currentYear) {
                         if (tx.type === 'income') {
                             if (tx.category === 'Honorarios' && tx.meta) {
-                                ytdHonorariosBrutos += tx.meta.bruto;
-                                ytdRetenciones += tx.meta.retencion;
+                                ytdHonorariosBrutos += safeFloat(tx.meta.bruto);
+                                ytdRetenciones += safeFloat(tx.meta.retencion);
                             } else if (tx.category === 'Sueldo') {
                                 ytdSueldos += clpAmount;
                             } else {
@@ -1400,7 +1767,9 @@ El reporte debe contener:
                             }
                         }
                         if (tx.type === 'expense' && tx.isDeductible) {
-                            ytdGastosAceptados += clpAmount;
+                            // FIX: si tiene IVA, solo el neto es gasto aceptado (el IVA es crédito fiscal)
+                            ytdGastosAceptados += tx.hasIva ? safeFloat(tx.ivaNet, clpAmount) : clpAmount;
+                            if (tx.hasIva) ytdIvaCredito += safeFloat(tx.ivaCredit);
                         }
                         if (tx.type === 'savings' && tx.savingsType === 'apv' && tx.apvRegime === 'B') {
                             ytdApvB += clpAmount;
@@ -1408,130 +1777,169 @@ El reporte debe contener:
                     }
 
                     if (tx.type === 'savings') {
-                        if(tx.savingsType === 'dap') savingsStats.dap.push(tx);
-                        if(tx.savingsType === 'apv') savingsStats.apv.push(tx);
-                        if(tx.savingsType === 'cuenta2') savingsStats.c2.push(tx);
+                        if (tx.savingsType === 'dap') savingsStats.dap.push(tx);
+                        if (tx.savingsType === 'apv') savingsStats.apv.push(tx);
+                        if (tx.savingsType === 'cuenta2') savingsStats.c2.push(tx);
                     }
                 });
 
-                // --- Panagusig iti Puhunan ---
+                // -------- Análisis de inversión (FIX #5: parseFloat seguro) --------
                 let invHtml = '';
                 const inflation = appState.rates.ipc;
 
-                if(savingsStats.dap.length === 0 && savingsStats.apv.length === 0 && savingsStats.c2.length === 0) {
-                    invHtml = '<p>Actualmente no tienes registros de Ahorro o Inversión. Recuerda la importancia de proteger tu dinero contra la inflación.</p>';
+                if (savingsStats.dap.length === 0 && savingsStats.apv.length === 0 && savingsStats.c2.length === 0) {
+                    invHtml = '<p>Actualmente no tienes registros de Ahorro o Inversión. Recuerda proteger tu dinero contra la inflación.</p>';
                 } else {
                     invHtml += '<ul class="space-y-3">';
-                    if(savingsStats.dap.length > 0) {
-                        const avgRate = savingsStats.dap.reduce((acc, curr) => acc + parseFloat(curr.dapRate), 0) / savingsStats.dap.length;
-                        const realRate = avgRate - inflation;
-                        const statusColor = realRate > 0 ? 'text-emerald-600' : 'text-red-500';
-                        invHtml += `<li><strong>DAP:</strong> Tasa promedio: ${avgRate.toFixed(1)}%. Rentabilidad real: <span class="font-bold ${statusColor}">${realRate.toFixed(1)}%</span>.</li>`;
+                    if (savingsStats.dap.length > 0) {
+                        // FIX #5: usar safeFloat
+                        const validDaps = savingsStats.dap.filter(d => safeFloat(d.dapRate) > 0);
+                        if (validDaps.length > 0) {
+                            const avgRate = validDaps.reduce((acc, curr) => acc + safeFloat(curr.dapRate), 0) / validDaps.length;
+                            const realRate = avgRate - inflation;
+                            const statusColor = realRate > 0 ? 'text-emerald-600' : 'text-red-500';
+                            invHtml += `<li><strong>DAP:</strong> Tasa promedio: ${avgRate.toFixed(1)}%. Rentabilidad real: <span class="font-bold ${statusColor}">${realRate.toFixed(1)}%</span> (descontando IPC ${inflation.toFixed(1)}%).</li>`;
+                        } else {
+                            invHtml += `<li><strong>DAP:</strong> ${savingsStats.dap.length} registros sin tasa informada.</li>`;
+                        }
                     }
-                    if(savingsStats.apv.length > 0) {
-                        invHtml += `<li><strong>APV:</strong> Tienes inversiones activas para la jubilación y optimización de base imponible.</li>`;
+                    if (savingsStats.apv.length > 0) {
+                        invHtml += `<li><strong>APV:</strong> Tienes inversiones activas para jubilación y optimización tributaria.</li>`;
                     }
-                    if(savingsStats.c2.length > 0) {
-                        invHtml += `<li><strong>Cuenta 2:</strong> Excelente vehículo por sus bajas comisiones (beneficios del art. 57 bis / 104 LIR).</li>`;
+                    if (savingsStats.c2.length > 0) {
+                        invHtml += `<li><strong>Cuenta 2:</strong> Excelente vehículo (Art. 57 bis / 104 LIR — beneficios tributarios al rescate).</li>`;
                     }
                     invHtml += '</ul>';
                 }
                 document.getElementById('coach-investment-analysis').innerHTML = invHtml;
 
-                // --- Pammagbaga iti Buwis (Chile) ---
+                // -------- Optimización tributaria --------
                 let taxHtml = '';
                 if (regime === 'natural') {
-                    taxHtml = `<p>Como <strong>Persona Natural</strong>, el foco está en el <em>Impuesto Global Complementario</em>. Aprovecha el APV Régimen B para reducir la carga tributaria en tu Operación Renta.</p>`;
+                    taxHtml = `<p>Como <strong>Persona Natural</strong>, foco en el <em>Impuesto Global Complementario</em>. APV Régimen B reduce base imponible (tope 600 UF/año).</p>`;
                 } else if (regime === '14d3') {
-                    taxHtml = `<p class="font-semibold text-indigo-700">Pro Pyme General (14 D N°3)</p><p>Tus Gastos Aceptados del mes suman <strong>${this.formatCurrency(acceptedExpenses)}</strong>. El impuesto de 1era Categoría que pague la empresa te servirá como crédito.</p>`;
+                    const idpc = (getIDPCRate(currentYear) * 100).toFixed(1);
+                    taxHtml = `
+                        <p class="font-semibold text-indigo-700">Pro Pyme General (14 D N°3)</p>
+                        <p>Gastos Aceptados del mes: <strong>${formatCurrency(acceptedExpenses)}</strong>.</p>
+                        <p>Tasa IDPC vigente AC ${currentYear}: <strong>${idpc}%</strong> ${currentYear >= 2025 && currentYear <= 2027 ? '(Ley 21.755 transitoria)' : ''}.</p>
+                        ${ytdIvaCredito > 0 ? `<p>IVA Crédito Fiscal acumulado AC ${currentYear}: <strong>${formatCurrency(ytdIvaCredito)}</strong></p>` : ''}
+                        <p class="text-xs text-slate-500 mt-2">El IDPC pagado es 100% crédito contra IGC en retiros (Art. 56 N°3).</p>
+                    `;
                 } else if (regime === '14d8') {
-                    taxHtml = `<p class="font-semibold text-indigo-700">Pro Pyme Transparente (14 D N°8)</p><p>Tu empresa NO paga impuesto de Primera Categoría. Considera el APV Régimen B personal para bajar tu tramo del Global Complementario, ya que tributarás directamente sobre el resultado.</p>`;
+                    taxHtml = `<p class="font-semibold text-indigo-700">Pro Pyme Transparente (14 D N°8)</p><p>Tu empresa NO paga IDPC. El resultado se atribuye directamente a tu Global Complementario. Considera APV Régimen B (tope 600 UF/año) para reducir base imponible.</p>`;
                 }
                 document.getElementById('coach-tax-analysis').innerHTML = taxHtml;
 
-                // --- Simulador Tributario Predictivo ---
+                // ============================================================
+                // SIMULADOR ANUAL (FIX #2 IGC en UTA + FIX #3 tasa Pyme)
+                // ============================================================
                 let simHtml = '';
-                let baseImponibleEmpresa = Math.max(0, ytdVentas - ytdGastosAceptados);
+                const baseImponibleEmpresa = Math.max(0, ytdVentas - ytdGastosAceptados);
                 let baseImponibleIGC = 0;
                 
                 if (regime === 'natural') {
-                    baseImponibleIGC = ytdSueldos + ytdHonorariosBrutos + ytdVentas - ytdApvB;
-                    let igcEstimado = this.calculateIGC(baseImponibleIGC);
-                    let aPagar = igcEstimado - ytdRetenciones;
+                    baseImponibleIGC = ytdSueldos + ytdHonorariosBrutos + ytdVentas - Math.min(ytdApvB, 600 * appState.rates.uf);
+                    const igcEstimado = this.calculateIGC(baseImponibleIGC);
+                    const aPagar = igcEstimado - ytdRetenciones;
+                    const bracket = this.getIGCBracket(baseImponibleIGC);
                     
                     simHtml = `
-                        <p class="text-sm text-slate-500 mb-4">Proyección basada en tus rentas de <strong>${currentYear}</strong>. Calculado en base a tramos referenciales del Global Complementario.</p>
+                        <p class="text-sm text-slate-500 mb-4">Proyección AT ${currentYear + 1} (rentas AC ${currentYear}). Tramos IGC en UTA = ${formatCurrency(appState.rates.utaDic)} (Diciembre).</p>
                         <div class="grid grid-cols-2 gap-4 text-sm mb-3">
-                            <div><strong>Sueldos Anuales:</strong> ${this.formatCurrency(ytdSueldos)}</div>
-                            <div><strong>Honorarios Brutos:</strong> ${this.formatCurrency(ytdHonorariosBrutos)}</div>
-                            <div><strong>Otras Rentas:</strong> ${this.formatCurrency(ytdVentas)}</div>
-                            <div class="text-emerald-600"><strong>Rebaja APV (Reg. B):</strong> -${this.formatCurrency(ytdApvB)}</div>
+                            <div><strong>Sueldos Anuales:</strong> ${formatCurrency(ytdSueldos)}</div>
+                            <div><strong>Honorarios Brutos:</strong> ${formatCurrency(ytdHonorariosBrutos)}</div>
+                            <div><strong>Otras Rentas:</strong> ${formatCurrency(ytdVentas)}</div>
+                            <div class="text-emerald-600"><strong>Rebaja APV (Reg. B):</strong> -${formatCurrency(Math.min(ytdApvB, 600 * appState.rates.uf))}</div>
                         </div>
                         <div class="bg-red-50 p-4 rounded-lg border border-red-100">
-                            <p class="font-bold text-red-800 text-lg mb-1">Base Imponible IGC: ${this.formatCurrency(Math.max(0, baseImponibleIGC))}</p>
-                            <p class="text-slate-700">Impuesto Calculado (IGC): ${this.formatCurrency(Math.max(0, igcEstimado))}</p>
-                            <p class="text-emerald-600 border-b border-red-200 pb-2 mb-2">Retenciones a favor: -${this.formatCurrency(ytdRetenciones)}</p>
+                            <p class="font-bold text-red-800 text-lg mb-1">Base Imponible IGC: ${formatCurrency(Math.max(0, baseImponibleIGC))}</p>
+                            ${bracket ? `<p class="text-xs text-slate-500">≈ ${bracket.baseUTA.toFixed(2)} UTA → tasa marginal ${(bracket.rate * 100).toFixed(1)}%</p>` : ''}
+                            <p class="text-slate-700 mt-2">IGC Calculado: ${formatCurrency(Math.max(0, igcEstimado))}</p>
+                            <p class="text-emerald-600 border-b border-red-200 pb-2 mb-2">Retenciones a favor: -${formatCurrency(ytdRetenciones)}</p>
                             <p class="font-bold text-xl ${aPagar > 0 ? 'text-red-600' : 'text-emerald-600'}">
-                                ${aPagar > 0 ? 'A pagar en abril: ' : 'Devolución esperada: '} ${this.formatCurrency(Math.abs(aPagar))}
+                                ${aPagar > 0 ? 'A pagar en abril ' + (currentYear + 1) + ': ' : 'Devolución esperada: '} ${formatCurrency(Math.abs(aPagar))}
                             </p>
                         </div>
                     `;
                 } else if (regime === '14d8') {
-                    baseImponibleIGC = ytdSueldos + ytdHonorariosBrutos + baseImponibleEmpresa - ytdApvB;
-                    let igcEstimado = this.calculateIGC(baseImponibleIGC);
-                    let aPagar = igcEstimado - ytdRetenciones;
+                    baseImponibleIGC = ytdSueldos + ytdHonorariosBrutos + baseImponibleEmpresa - Math.min(ytdApvB, 600 * appState.rates.uf);
+                    const igcEstimado = this.calculateIGC(baseImponibleIGC);
+                    const aPagar = igcEstimado - ytdRetenciones;
+                    const bracket = this.getIGCBracket(baseImponibleIGC);
 
                     simHtml = `
-                        <p class="text-sm text-slate-500 mb-4">Proyección de atribución en <strong>${currentYear}</strong> (DJ 1947). La empresa no paga IDPC, tú asumes el resultado en tu Global Complementario.</p>
+                        <p class="text-sm text-slate-500 mb-4">Proyección DJ 1947 — atribución AT ${currentYear + 1}. La empresa 14D8 no paga IDPC; tú asumes el resultado en IGC.</p>
                         <div class="grid grid-cols-2 gap-4 text-sm mb-3">
-                            <div><strong>Sueldos / Honorarios:</strong> ${this.formatCurrency(ytdSueldos + ytdHonorariosBrutos)}</div>
-                            <div class="text-indigo-600"><strong>Base Atribuida Empresa (Ventas - Gastos):</strong> ${this.formatCurrency(baseImponibleEmpresa)}</div>
-                            <div class="text-emerald-600"><strong>Rebaja APV (Reg. B):</strong> -${this.formatCurrency(ytdApvB)}</div>
+                            <div><strong>Sueldos / Honorarios:</strong> ${formatCurrency(ytdSueldos + ytdHonorariosBrutos)}</div>
+                            <div class="text-indigo-600"><strong>Base Atribuida (V - G):</strong> ${formatCurrency(baseImponibleEmpresa)}</div>
+                            <div class="text-emerald-600"><strong>Rebaja APV (Reg. B):</strong> -${formatCurrency(Math.min(ytdApvB, 600 * appState.rates.uf))}</div>
                         </div>
                         <div class="bg-red-50 p-4 rounded-lg border border-red-100">
-                            <p class="font-bold text-red-800 text-lg mb-1">Base Imponible IGC (Dueño): ${this.formatCurrency(Math.max(0, baseImponibleIGC))}</p>
-                            <p class="text-slate-700">Impuesto IGC Estimado: ${this.formatCurrency(Math.max(0, igcEstimado))}</p>
-                            <p class="text-emerald-600 border-b border-red-200 pb-2 mb-2">Retenciones Honorarios a favor: -${this.formatCurrency(ytdRetenciones)}</p>
+                            <p class="font-bold text-red-800 text-lg mb-1">Base Imponible IGC (Dueño): ${formatCurrency(Math.max(0, baseImponibleIGC))}</p>
+                            ${bracket ? `<p class="text-xs text-slate-500">≈ ${bracket.baseUTA.toFixed(2)} UTA → tasa marginal ${(bracket.rate * 100).toFixed(1)}%</p>` : ''}
+                            <p class="text-slate-700 mt-2">IGC Estimado: ${formatCurrency(Math.max(0, igcEstimado))}</p>
+                            <p class="text-emerald-600 border-b border-red-200 pb-2 mb-2">Retenciones a favor: -${formatCurrency(ytdRetenciones)}</p>
                             <p class="font-bold text-xl ${aPagar > 0 ? 'text-red-600' : 'text-emerald-600'}">
-                                ${aPagar > 0 ? 'Saldo a pagar en abril: ' : 'Devolución esperada: '} ${this.formatCurrency(Math.abs(aPagar))}
+                                ${aPagar > 0 ? 'Saldo a pagar abril ' + (currentYear + 1) + ': ' : 'Devolución esperada: '} ${formatCurrency(Math.abs(aPagar))}
                             </p>
                         </div>
                     `;
                 } else if (regime === '14d3') {
-                    let impuestoEmpresa = baseImponibleEmpresa * 0.25; // Tasa Pyme asumiendo 25% régimen general
+                    // FIX CRÍTICO #3: tasa transitoria correcta
+                    const tasaIDPC = getIDPCRate(currentYear);
+                    const impuestoEmpresa = baseImponibleEmpresa * tasaIDPC;
+                    
+                    // Incentivo al ahorro Art. 14 letra E (estimación)
+                    const topeIncentivoCLP = 5000 * appState.rates.uf;
+                    const incentivoMaxCLP = Math.min(baseImponibleEmpresa * 0.5, topeIncentivoCLP);
+                    const ahorroPotencial = incentivoMaxCLP * tasaIDPC;
+                    
+                    const tasaLegend = currentYear >= 2025 && currentYear <= 2027 
+                        ? `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs">Ley 21.755 transitoria</span>`
+                        : currentYear === 2028 
+                            ? `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs">Transición 2028</span>`
+                            : `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">Tasa permanente</span>`;
 
                     simHtml = `
-                        <p class="text-sm text-slate-500 mb-4">Simulación de resultados comerciales <strong>${currentYear}</strong>. Impuesto de Primera Categoría (IDPC) de la Empresa.</p>
+                        <p class="text-sm text-slate-500 mb-4">Simulación AC ${currentYear} — IDPC empresa.</p>
                         <div class="grid grid-cols-2 gap-4 text-sm mb-3">
-                            <div><strong>Ingresos Percibidos:</strong> ${this.formatCurrency(ytdVentas)}</div>
-                            <div class="text-emerald-600"><strong>Gastos Aceptados Pagados:</strong> -${this.formatCurrency(ytdGastosAceptados)}</div>
+                            <div><strong>Ingresos Percibidos:</strong> ${formatCurrency(ytdVentas)}</div>
+                            <div class="text-emerald-600"><strong>Gastos Aceptados Pagados:</strong> -${formatCurrency(ytdGastosAceptados)}</div>
+                            ${ytdIvaCredito > 0 ? `<div class="col-span-2 text-blue-600"><strong>IVA Crédito Fiscal acumulado:</strong> ${formatCurrency(ytdIvaCredito)} (no afecta RLI, pero rebaja IVA débito en F29)</div>` : ''}
                         </div>
                         <div class="bg-red-50 p-4 rounded-lg border border-red-100 mb-3">
-                            <p class="font-bold text-red-800 text-lg mb-1">Base Imponible Empresa (IDPC): ${this.formatCurrency(baseImponibleEmpresa)}</p>
-                            <p class="text-slate-700 font-bold">Impuesto Empresa (25%): ${this.formatCurrency(impuestoEmpresa)}</p>
-                            <p class="text-xs text-slate-500 mt-1">Recuerda que este monto se cubre (en parte o totalmente) con tus PPM pagados mensuales.</p>
+                            <p class="font-bold text-red-800 text-lg mb-1">RLI (Base Imponible IDPC): ${formatCurrency(baseImponibleEmpresa)}</p>
+                            <p class="text-slate-700 font-bold">IDPC (${(tasaIDPC * 100).toFixed(1)}%): ${formatCurrency(impuestoEmpresa)} ${tasaLegend}</p>
+                            <p class="text-xs text-slate-500 mt-1">Este monto se cubre con tus PPM mensuales (tasa rebajada al 50% en 14D3 hasta dic 2027).</p>
                         </div>
+                        ${baseImponibleEmpresa > 0 ? `
+                        <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-sm mb-3">
+                            <strong class="text-emerald-800"><i class="fa-solid fa-piggy-bank mr-1"></i> Incentivo al Ahorro Art. 14 letra E:</strong>
+                            <p class="text-slate-700 mt-1">Si reinviertes hasta <strong>${formatCurrency(incentivoMaxCLP)}</strong> (50% de RLI, tope 5.000 UF), podrías ahorrar hasta <strong class="text-emerald-700">${formatCurrency(ahorroPotencial)}</strong> en IDPC.</p>
+                        </div>
+                        ` : ''}
                         <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-sm text-indigo-800">
-                            <strong>Global Complementario:</strong> Tributarás como persona natural <em>solo sobre los retiros efectivos</em> que realices (declarados en DJ 1948), utilizando el IDPC de la empresa como crédito a tu favor.
+                            <strong>Global Complementario:</strong> Tributarás <em>solo sobre retiros efectivos</em> (DJ 1948), usando el IDPC de la empresa como crédito 100% (Art. 56 N°3).
                         </div>
                     `;
                 }
                 document.getElementById('coach-tax-simulator').innerHTML = simHtml;
 
-                // --- Panagusig iti Cashflow ---
+                // -------- Cashflow operativo --------
                 const savingsFlow = monthlyIncome - monthlyExpense;
                 const savingsRate = monthlyIncome > 0 ? (savingsFlow / monthlyIncome) * 100 : 0;
                 let diagHtml = '', quickTip = '';
 
                 if (monthlyIncome === 0 && monthlyExpense === 0) {
                     diagHtml = '<p>Ingresa tus movimientos de este mes para analizar el flujo.</p>';
-                    quickTip = 'Mantén tus registros actualizados diariamente.';
+                    quickTip = 'Mantén tus registros actualizados.';
                 } else if (savingsRate < 0) {
                     diagHtml = `<p class="text-red-600 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Déficit del ${Math.abs(savingsRate).toFixed(1)}%</p><p>Recorta gastos urgentes.</p>`;
-                    quickTip = "Atención: Tu flujo mensual está negativo.";
+                    quickTip = "Atención: flujo mensual negativo.";
                 } else {
                     diagHtml = `<p class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check mr-2"></i>Flujo Saludable (${savingsRate.toFixed(1)}%)</p><p>Aprovecha de reinvertir el excedente.</p>`;
-                    quickTip = "¡Buen flujo este mes! Destina el excedente a ahorro.";
+                    quickTip = "¡Buen flujo este mes! Destina excedente a ahorro.";
                 }
 
                 document.getElementById('coach-savings-analysis').innerHTML = diagHtml;
@@ -1539,10 +1947,7 @@ El reporte debe contener:
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            app.init();
-        });
-
+        document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
 </html>
