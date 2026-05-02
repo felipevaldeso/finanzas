@@ -452,7 +452,19 @@
                     <h2 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-user-graduate text-indigo-600 mr-2"></i>Coach Tributario (AT <script>document.write(new Date().getFullYear()+1)</script>)</h2>
                     <p class="text-slate-500 mt-1">Análisis de la Operación Renta del próximo año basado en tus movimientos.</p>
                 </div>
+                <button onclick="app.generateAIReport()" id="btn-ai-coach" class="w-full md:w-auto mt-4 md:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-brain mr-2"></i> Generar Análisis Profundo
+                </button>
             </div>
+            
+            <div id="ai-report-container" class="hidden mb-8 bg-white rounded-2xl shadow-md border border-purple-100 overflow-hidden relative">
+                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 border-b border-purple-100 flex justify-between items-center">
+                    <h3 class="font-bold text-indigo-900"><i class="fa-solid fa-wand-magic-sparkles text-purple-600 mr-2"></i>Reporte Personalizado</h3>
+                    <button onclick="document.getElementById('ai-report-container').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div id="ai-report-content" class="p-4 md:p-6 text-slate-700 leading-relaxed max-w-none"></div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-100 border-t-4 border-t-red-500 lg:col-span-2">
                     <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-calculator mr-2 text-red-500"></i>Simulador de Impuesto Global Complementario (IGC)</h3>
@@ -1160,6 +1172,88 @@
                 document.getElementById('kpi-balance').innerText = formatCurrency(totalIncome - totalExpense);
                 document.getElementById('kpi-savings').innerText = formatCurrency(totalSavings);
                 document.getElementById('kpi-debt').innerText = formatCurrency(Math.max(0, totalDebt));
+
+                this.renderCharts();
+            },
+
+            renderCharts() {
+                const txs = appState.transactions;
+                const twelveMonthsAgo = new Date();
+                twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+                twelveMonthsAgo.setDate(1);
+
+                const months = [];
+                const incomeData = [];
+                const expenseData = [];
+                
+                for(let i=0; i<12; i++) {
+                    const d = new Date(twelveMonthsAgo.getFullYear(), twelveMonthsAgo.getMonth() + i, 1);
+                    months.push(d.toLocaleDateString('es-CL', {month:'short', year:'2-digit'}));
+                    incomeData.push(0);
+                    expenseData.push(0);
+                }
+
+                const categoryTotals = {};
+
+                txs.forEach(tx => {
+                    const txDate = new Date(tx.date);
+                    if (isNaN(txDate.getTime())) return;
+                    const baseCLP = this.getBaseAmountInCLP(tx);
+
+                    // Evolución
+                    if (txDate >= twelveMonthsAgo) {
+                        const monthIndex = (txDate.getFullYear() - twelveMonthsAgo.getFullYear()) * 12 + txDate.getMonth() - twelveMonthsAgo.getMonth();
+                        if (monthIndex >= 0 && monthIndex < 12) {
+                            if (tx.type === 'income') incomeData[monthIndex] += baseCLP;
+                            if (tx.type === 'expense' || (tx.type === 'debt' && tx.subType === 'abono') || (tx.type === 'savings' && tx.subType === 'new')) {
+                                 expenseData[monthIndex] += baseCLP;
+                            }
+                        }
+                    }
+
+                    // Categorías (sólo gastos operativos reales)
+                    if (txDate >= twelveMonthsAgo && tx.type === 'expense') {
+                        const cat = tx.category || 'Otros';
+                        categoryTotals[cat] = (categoryTotals[cat] || 0) + baseCLP;
+                    }
+                });
+
+                // Gráfico 1: Evolución
+                const ctxEvo = document.getElementById('evolutionChart');
+                if(!ctxEvo) return;
+                if(appState.charts.evolution) appState.charts.evolution.destroy();
+                appState.charts.evolution = new Chart(ctxEvo.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            { label: 'Ingresos', data: incomeData, backgroundColor: '#34d399', borderRadius: 4 },
+                            { label: 'Salidas', data: expenseData, backgroundColor: '#f87171', borderRadius: 4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+
+                // Gráfico 2: Categorías
+                const ctxCat = document.getElementById('categoryChart');
+                if(!ctxCat) return;
+                if(appState.charts.category) appState.charts.category.destroy();
+                
+                const catLabels = Object.keys(categoryTotals);
+                const catData = Object.values(categoryTotals);
+                
+                appState.charts.category = new Chart(ctxCat.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels.length ? catLabels : ['Sin datos'],
+                        datasets: [{
+                            data: catData.length ? catData : [1],
+                            backgroundColor: catData.length ? ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#34d399', '#2dd4bf', '#38bdf8', '#818cf8', '#c084fc', '#f472b6'] : ['#e2e8f0'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } }, cutout: '70%' }
+                });
             },
 
             // --- COACH TRIBUTARIO (SIMULADOR IGC ACTUALIZADO) ---
@@ -1277,6 +1371,73 @@
                 }
 
                 container.innerHTML = html;
+            },
+
+            async generateAIReport() {
+                const btn = document.getElementById('btn-ai-coach');
+                const container = document.getElementById('ai-report-container');
+                const content = document.getElementById('ai-report-content');
+                
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Analizando...';
+                btn.disabled = true;
+                container.classList.remove('hidden');
+                content.innerHTML = '<div class="ai-loading h-24 rounded-lg w-full"></div>';
+
+                try {
+                    // Recopilar métricas de los últimos 30 días
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    
+                    let income30 = 0, expense30 = 0, debtTotal = 0;
+                    const categories = {};
+                    
+                    appState.transactions.forEach(tx => {
+                        const d = new Date(tx.date);
+                        const val = this.getBaseAmountInCLP(tx);
+                        
+                        if (tx.type === 'debt' && tx.subType !== 'abono') {
+                            const abonos = appState.transactions.filter(t => t.parentId == tx.id).reduce((s,a) => s + this.getBaseAmountInCLP(a), 0);
+                            debtTotal += Math.max(0, val - abonos);
+                        }
+                        
+                        if (isNaN(d.getTime()) || d < thirtyDaysAgo) return;
+                        
+                        if (tx.type === 'income') income30 += val;
+                        if (tx.type === 'expense') {
+                            expense30 += val;
+                            categories[tx.category] = (categories[tx.category] || 0) + val;
+                        }
+                    });
+                    
+                    let topCat = 'Ninguna';
+                    let maxVal = 0;
+                    for (const [cat, val] of Object.entries(categories)) {
+                        if (val > maxVal) { maxVal = val; topCat = cat; }
+                    }
+
+                    const payload = {
+                        action: 'gemini_report',
+                        regime: document.getElementById('regime-select').value,
+                        income30,
+                        expense30,
+                        topCategory: topCat,
+                        debtTotal,
+                        ipc: appState.rates.ipc
+                    };
+
+                    const res = await callProxy('gemini_report', payload);
+                    if (res.html) {
+                        content.innerHTML = res.html;
+                    } else {
+                        throw new Error("No HTML response");
+                    }
+                } catch (e) {
+                    content.innerHTML = `<div class="text-red-500"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Hubo un error al contactar al Coach (IA). Verifica tu conexión o la URL del script en Google.</div>`;
+                    this.showToast('Error en Coach IA', 'error');
+                } finally {
+                    btn.innerHTML = '<i class="fa-solid fa-brain mr-2"></i> Generar Análisis Profundo';
+                    btn.disabled = false;
+                }
             },
 
             showConfirmModal(id) {
